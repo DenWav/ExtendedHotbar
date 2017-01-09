@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "minVersion": "0.6",
+  "package": "com.demonwav.extendedhotbar.mixin",
+  "mixins": [
+    "MixinGuiInGame"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
