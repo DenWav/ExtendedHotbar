@@ -1,6 +1,5 @@
 package com.demonwav.extendedhotbar.mixin;
 
-import com.mumfrey.liteloader.gl.GL;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiIngame;
