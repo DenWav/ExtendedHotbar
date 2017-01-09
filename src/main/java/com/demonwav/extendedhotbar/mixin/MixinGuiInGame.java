@@ -16,6 +16,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import static com.mumfrey.liteloader.gl.GL.*;
 
 @Mixin(GuiIngame.class)
 public abstract class MixinGuiInGame extends Gui {
@@ -29,21 +30,20 @@ public abstract class MixinGuiInGame extends Gui {
 
     @Inject(method = "renderHotbar", at = @At("RETURN"))
     public void drawTopHotbar(ScaledResolution sr, float partialTicks, CallbackInfo info) {
-        final EntityPlayer entityplayer = (EntityPlayer)this.mc.getRenderViewEntity();
+        final EntityPlayer entityplayer = (EntityPlayer) this.mc.getRenderViewEntity();
         if (entityplayer == null) {
             return;
         }
 
         final int i = sr.getScaledWidth() / 2;
 
-        GL.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         mc.getTextureManager().bindTexture(WIDGETS_TEX_PATH);
-        GL.glEnableBlend();
+        glEnableBlend();
         drawTexturedModalRect(i - 91, sr.getScaledHeight() - 22 - distance, 0, 0, 182, 22);
 
-        GL.glEnableRescaleNormal();
-        GL.glEnableBlend();
-        GL.glBlendFuncSeparate(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA, GL.GL_ONE, GL.GL_ZERO);
+        glEnableRescaleNormal();
+        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
         RenderHelper.enableGUIStandardItemLighting();
 
         for (int l = 0; l < 9; ++l) {
@@ -53,27 +53,27 @@ public abstract class MixinGuiInGame extends Gui {
         }
 
         RenderHelper.disableStandardItemLighting();
-        GL.glDisableRescaleNormal();
-        GL.glDisableBlend();
+        glDisableRescaleNormal();
+        glDisableBlend();
     }
 
     @Inject(method = "renderPlayerStats", at = @At("HEAD"))
     public void movePlayerStatsUp(ScaledResolution scaledRes, CallbackInfo info) {
-        GL.glTranslated(0, -distance, 0);
+        glTranslated(0, -distance, 0);
     }
 
     @Inject(method = "renderPlayerStats", at = @At("RETURN"))
     public void resetPlayerStats(ScaledResolution scaledRes, CallbackInfo info) {
-        GL.glTranslated(0, distance, 0);
+        glTranslated(0, distance, 0);
     }
 
     @Inject(method = "renderExpBar", at = @At("HEAD"))
     public void moveExpBarUp(ScaledResolution scaledRes, int x, CallbackInfo info) {
-        GL.glTranslated(0, -distance, 0);
+        glTranslated(0, -distance, 0);
     }
 
     @Inject(method = "renderExpBar", at = @At("RETURN"))
     public void resetExpBar(ScaledResolution scaledRes, int x, CallbackInfo info) {
-        GL.glTranslated(0, distance, 0);
+        glTranslated(0, distance, 0);
     }
 }
