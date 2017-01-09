@@ -1,0 +1,7 @@
+{
+  "name": "extendedhotbar",
+  "mcversion": "1.11",
+  "mixinConfigs": [
+    "mixins.extendedhotbar.json"
+  ]
+}
