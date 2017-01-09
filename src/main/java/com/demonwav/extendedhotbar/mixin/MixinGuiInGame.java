@@ -13,6 +13,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import static com.mumfrey.liteloader.gl.GL.*;
@@ -20,7 +21,7 @@ import static com.mumfrey.liteloader.gl.GL.*;
 @Mixin(GuiIngame.class)
 public abstract class MixinGuiInGame extends Gui {
 
-    private static final int distance = 22;
+    private static final int distance = -22;
 
     @Shadow @Final private static ResourceLocation WIDGETS_TEX_PATH;
 
@@ -39,7 +40,7 @@ public abstract class MixinGuiInGame extends Gui {
         glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         mc.getTextureManager().bindTexture(WIDGETS_TEX_PATH);
         glEnableBlend();
-        drawTexturedModalRect(i - 91, sr.getScaledHeight() - 22 - distance, 0, 0, 182, 22);
+        drawTexturedModalRect(i - 91, sr.getScaledHeight() - 22 + distance, 0, 0, 182, 22);
 
         glEnableRescaleNormal();
         glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
@@ -47,7 +48,7 @@ public abstract class MixinGuiInGame extends Gui {
 
         for (int l = 0; l < 9; ++l) {
             int i1 = i - 90 + l * 20 + 2;
-            int j1 = sr.getScaledHeight() - 16 - 3 - distance;
+            int j1 = sr.getScaledHeight() - 16 - 3 + distance;
             this.renderHotbarItem(i1, j1, partialTicks, entityplayer, entityplayer.inventory.mainInventory.get(l + 27));
         }
 
@@ -58,21 +59,39 @@ public abstract class MixinGuiInGame extends Gui {
 
     @Inject(method = "renderPlayerStats", at = @At("HEAD"))
     public void movePlayerStatsUp(ScaledResolution scaledRes, CallbackInfo info) {
-        glTranslated(0, -distance, 0);
+        glPushMatrix();
+        glTranslated(0, distance, 0);
     }
 
     @Inject(method = "renderPlayerStats", at = @At("RETURN"))
     public void resetPlayerStats(ScaledResolution scaledRes, CallbackInfo info) {
-        glTranslated(0, distance, 0);
+        glPopMatrix();
     }
 
     @Inject(method = "renderExpBar", at = @At("HEAD"))
     public void moveExpBarUp(ScaledResolution scaledRes, int x, CallbackInfo info) {
-        glTranslated(0, -distance, 0);
+        glPushMatrix();
+        glTranslated(0, distance, 0);
     }
 
     @Inject(method = "renderExpBar", at = @At("RETURN"))
     public void resetExpBar(ScaledResolution scaledRes, int x, CallbackInfo info) {
+        glPopMatrix();
+    }
+
+    @Inject(method = "renderSelectedItem", at = @At("HEAD"))
+    public void moveItemTextUp(ScaledResolution scaledRes, CallbackInfo info) {
+        glPushMatrix();
         glTranslated(0, distance, 0);
+    }
+
+    @Inject(method = "renderSelectedItem", at = @At("RETURN"))
+    public void resetItemTExt(ScaledResolution scaledRes, CallbackInfo info) {
+        glPopMatrix();
+    }
+
+    @ModifyArg(method = "renderGameOverlay", index = 2, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/FontRenderer;drawString(Ljava/lang/String;III)I"))
+    protected int moveActionBarText(int y) {
+        return y + distance;
     }
 }
