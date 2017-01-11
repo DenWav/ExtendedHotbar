@@ -1,5 +1,6 @@
 package com.demonwav.extendedhotbar.mixin;
 
+import com.mumfrey.liteloader.core.LiteLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiIngame;
@@ -18,6 +19,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import static com.mumfrey.liteloader.gl.GL.*;
 
+import com.demonwav.extendedhotbar.LiteModExtendedHotbar;
+
 @Mixin(GuiIngame.class)
 public abstract class MixinGuiInGame extends Gui {
 
@@ -30,6 +33,10 @@ public abstract class MixinGuiInGame extends Gui {
 
     @Inject(method = "renderHotbar", at = @At("RETURN"))
     public void drawTopHotbar(ScaledResolution sr, float partialTicks, CallbackInfo info) {
+        if (!LiteLoader.getInstance().getMod(LiteModExtendedHotbar.class).isEnabled()) {
+            return;
+        }
+
         final EntityPlayer entityplayer = (EntityPlayer) this.mc.getRenderViewEntity();
         if (entityplayer == null) {
             return;
@@ -57,41 +64,55 @@ public abstract class MixinGuiInGame extends Gui {
         glDisableBlend();
     }
 
+    private void moveUp() {
+        if (LiteLoader.getInstance().getMod(LiteModExtendedHotbar.class).isEnabled()) {
+            glPushMatrix();
+            glTranslated(0, distance, 0);
+        }
+    }
+
+    private void reset() {
+        if (LiteLoader.getInstance().getMod(LiteModExtendedHotbar.class).isEnabled()) {
+            glPopMatrix();
+        }
+    }
+
     @Inject(method = "renderPlayerStats", at = @At("HEAD"))
     public void movePlayerStatsUp(ScaledResolution scaledRes, CallbackInfo info) {
-        glPushMatrix();
-        glTranslated(0, distance, 0);
+        moveUp();
     }
 
     @Inject(method = "renderPlayerStats", at = @At("RETURN"))
     public void resetPlayerStats(ScaledResolution scaledRes, CallbackInfo info) {
-        glPopMatrix();
+        reset();
     }
 
     @Inject(method = "renderExpBar", at = @At("HEAD"))
     public void moveExpBarUp(ScaledResolution scaledRes, int x, CallbackInfo info) {
-        glPushMatrix();
-        glTranslated(0, distance, 0);
+        moveUp();
     }
 
     @Inject(method = "renderExpBar", at = @At("RETURN"))
     public void resetExpBar(ScaledResolution scaledRes, int x, CallbackInfo info) {
-        glPopMatrix();
+        reset();
     }
 
     @Inject(method = "renderSelectedItem", at = @At("HEAD"))
     public void moveItemTextUp(ScaledResolution scaledRes, CallbackInfo info) {
-        glPushMatrix();
-        glTranslated(0, distance, 0);
+        moveUp();
     }
 
     @Inject(method = "renderSelectedItem", at = @At("RETURN"))
     public void resetItemTExt(ScaledResolution scaledRes, CallbackInfo info) {
-        glPopMatrix();
+        reset();
     }
 
     @ModifyArg(method = "renderGameOverlay", index = 2, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/FontRenderer;drawString(Ljava/lang/String;III)I"))
     protected int moveActionBarText(int y) {
-        return y + distance;
+        if (LiteLoader.getInstance().getMod(LiteModExtendedHotbar.class).isEnabled()) {
+            return y + distance;
+        } else {
+            return y;
+        }
     }
 }
