@@ -50,6 +50,7 @@ public class LiteModExtendedHotbar implements Tickable {
     public void onTick(Minecraft minecraft, float partialTicks, boolean inGame, boolean clock) {
         if (toggleKeyBinding.isPressed()) {
             enabled = !enabled;
+            LiteLoader.getInstance().writeConfig(this);
             return;
         }
 
