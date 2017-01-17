@@ -34,6 +34,12 @@ minecraft {
     runDir = "run"
 }
 
+sourceSets {
+    main {
+        refMap = "mixins.extendedhotbar.refmap.json"
+    }
+}
+
 mixin {
     defaultObfuscationEnv notch
 }

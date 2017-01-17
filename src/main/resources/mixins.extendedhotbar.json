@@ -2,6 +2,7 @@
   "required": true,
   "minVersion": "0.6",
   "package": "com.demonwav.extendedhotbar.mixin",
+  "refmap": "mixins.extendedhotbar.refmap.json",
   "mixins": [
     "MixinGuiInGame"
   ],
