@@ -9,6 +9,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.inventory.ClickType;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import org.lwjgl.input.Keyboard;
 
 import java.io.File;
@@ -68,16 +69,25 @@ public class LiteModExtendedHotbar implements Tickable {
 
             final int windowId = inventory.inventorySlots.windowId;
 
-            for (int i = 0; i < 9; i++) {
-                minecraft.playerController.windowClick(windowId, i + 36, 0, ClickType.PICKUP, minecraft.player);
-                minecraft.playerController.windowClick(windowId, 4, 0, ClickType.PICKUP, minecraft.player);
-                minecraft.playerController.windowClick(windowId, i + 27, 0, ClickType.PICKUP, minecraft.player);
-                minecraft.playerController.windowClick(windowId, i + 36, 0, ClickType.PICKUP, minecraft.player);
-                minecraft.playerController.windowClick(windowId, 4, 0, ClickType.PICKUP, minecraft.player);
-                minecraft.playerController.windowClick(windowId, i + 27, 0, ClickType.PICKUP, minecraft.player);
+            if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)) {
+                int currentItem = minecraft.player.inventory.currentItem;
+                swapItem(minecraft, windowId, currentItem);
+            } else {
+                for (int i = 0; i < 9; i++) {
+                    swapItem(minecraft, windowId, i);
+                }
             }
 
             minecraft.displayGuiScreen(null);
         }
+    }
+
+    private void swapItem(Minecraft minecraft, int windowId, int slotId) {
+        minecraft.playerController.windowClick(windowId, slotId + 36, 0, ClickType.PICKUP, minecraft.player);
+        minecraft.playerController.windowClick(windowId, 4, 0, ClickType.PICKUP, minecraft.player);
+        minecraft.playerController.windowClick(windowId, slotId + 27, 0, ClickType.PICKUP, minecraft.player);
+        minecraft.playerController.windowClick(windowId, slotId + 36, 0, ClickType.PICKUP, minecraft.player);
+        minecraft.playerController.windowClick(windowId, 4, 0, ClickType.PICKUP, minecraft.player);
+        minecraft.playerController.windowClick(windowId, slotId + 27, 0, ClickType.PICKUP, minecraft.player);
     }
 }
