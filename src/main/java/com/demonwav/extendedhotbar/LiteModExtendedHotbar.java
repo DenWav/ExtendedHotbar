@@ -33,7 +33,7 @@ public class LiteModExtendedHotbar implements Tickable {
 
     @Override
     public String getVersion() {
-        return "1.1.2";
+        return "1.1.3";
     }
 
     @Override
