@@ -32,7 +32,7 @@ public abstract class MixinGuiInGame extends Gui {
     @Shadow protected abstract void renderHotbarItem(int p_184044_1_, int p_184044_2_, float p_184044_3_, EntityPlayer player, ItemStack stack);
 
     @Inject(method = "renderHotbar", at = @At("RETURN"))
-    public void drawTopHotbar(ScaledResolution sr, float partialTicks, CallbackInfo info) {
+    private void drawTopHotbar(ScaledResolution sr, float partialTicks, CallbackInfo info) {
         if (!LiteLoader.getInstance().getMod(LiteModExtendedHotbar.class).isEnabled()) {
             return;
         }
@@ -54,6 +54,7 @@ public abstract class MixinGuiInGame extends Gui {
         RenderHelper.enableGUIStandardItemLighting();
 
         for (int l = 0; l < 9; ++l) {
+            // Anyone like magic numbers?
             int i1 = i - 90 + l * 20 + 2;
             int j1 = sr.getScaledHeight() - 16 - 3 + distance;
             this.renderHotbarItem(i1, j1, partialTicks, entityplayer, entityplayer.inventory.mainInventory.get(l + 27));
@@ -77,38 +78,28 @@ public abstract class MixinGuiInGame extends Gui {
         }
     }
 
-    @Inject(method = "renderPlayerStats", at = @At("HEAD"))
-    public void movePlayerStatsUp(ScaledResolution scaledRes, CallbackInfo info) {
-        moveUp();
-    }
-
-    @Inject(method = "renderPlayerStats", at = @At("RETURN"))
-    public void resetPlayerStats(ScaledResolution scaledRes, CallbackInfo info) {
-        reset();
-    }
-
-    @Inject(method = "renderExpBar", at = @At("HEAD"))
-    public void moveExpBarUp(ScaledResolution scaledRes, int x, CallbackInfo info) {
-        moveUp();
-    }
-
-    @Inject(method = "renderExpBar", at = @At("RETURN"))
-    public void resetExpBar(ScaledResolution scaledRes, int x, CallbackInfo info) {
-        reset();
-    }
-
-    @Inject(method = "renderSelectedItem", at = @At("HEAD"))
-    public void moveItemTextUp(ScaledResolution scaledRes, CallbackInfo info) {
-        moveUp();
-    }
-
-    @Inject(method = "renderSelectedItem", at = @At("RETURN"))
-    public void resetItemTExt(ScaledResolution scaledRes, CallbackInfo info) {
-        reset();
+    @Inject(
+        id = "move",
+        method = {
+            "renderPlayerStats",
+            "renderExpBar",
+            "renderSelectedItem"
+        },
+        at  = {
+            @At(value = "HEAD", id = "head"),
+            @At(value = "RETURN", id = "return")
+        }
+    )
+    private void moveGui(final CallbackInfo info) {
+        if ("move:head".equals(info.getId())) {
+            moveUp();
+        } else {
+            reset();
+        }
     }
 
     @ModifyArg(method = "renderGameOverlay", index = 2, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/FontRenderer;drawString(Ljava/lang/String;III)I"))
-    protected int moveActionBarText(int y) {
+    private int moveActionBarText(int y) {
         if (LiteLoader.getInstance().getMod(LiteModExtendedHotbar.class).isEnabled()) {
             return y + distance;
         } else {

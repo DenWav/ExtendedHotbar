@@ -1,6 +1,6 @@
 {
   "required": true,
-  "minVersion": "0.6",
+  "minVersion": "0.7.1",
   "package": "com.demonwav.extendedhotbar.mixin",
   "refmap": "mixins.extendedhotbar.refmap.json",
   "mixins": [

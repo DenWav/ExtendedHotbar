@@ -9,7 +9,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.inventory.ClickType;
-import net.minecraft.inventory.EntityEquipmentSlot;
 import org.lwjgl.input.Keyboard;
 
 import java.io.File;
@@ -34,7 +33,7 @@ public class LiteModExtendedHotbar implements Tickable {
 
     @Override
     public String getVersion() {
-        return "1.0";
+        return "1.1.2";
     }
 
     @Override
