@@ -24,7 +24,7 @@ import com.demonwav.extendedhotbar.LiteModExtendedHotbar;
 @Mixin(GuiIngame.class)
 public abstract class MixinGuiInGame extends Gui {
 
-    private static final int distance = -22;
+    private static final int DISTANCE = -22;
 
     @Shadow @Final private static ResourceLocation WIDGETS_TEX_PATH;
 
@@ -32,7 +32,7 @@ public abstract class MixinGuiInGame extends Gui {
     @Shadow protected abstract void renderHotbarItem(int p_184044_1_, int p_184044_2_, float p_184044_3_, EntityPlayer player, ItemStack stack);
 
     @Inject(method = "renderHotbar", at = @At("RETURN"))
-    private void drawTopHotbar(ScaledResolution sr, float partialTicks, CallbackInfo info) {
+    private void drawTopHotbar(final ScaledResolution sr, final float partialTicks, final CallbackInfo info) {
         if (!LiteLoader.getInstance().getMod(LiteModExtendedHotbar.class).isEnabled()) {
             return;
         }
@@ -47,7 +47,7 @@ public abstract class MixinGuiInGame extends Gui {
         glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         mc.getTextureManager().bindTexture(WIDGETS_TEX_PATH);
         glEnableBlend();
-        drawTexturedModalRect(i - 91, sr.getScaledHeight() - 22 + distance, 0, 0, 182, 22);
+        drawTexturedModalRect(i - 91, sr.getScaledHeight() - 22 + DISTANCE, 0, 0, 182, 22);
 
         glEnableRescaleNormal();
         glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
@@ -55,8 +55,8 @@ public abstract class MixinGuiInGame extends Gui {
 
         for (int l = 0; l < 9; ++l) {
             // Anyone like magic numbers?
-            int i1 = i - 90 + l * 20 + 2;
-            int j1 = sr.getScaledHeight() - 16 - 3 + distance;
+            final int i1 = i - 90 + l * 20 + 2;
+            final int j1 = sr.getScaledHeight() - 16 - 3 + DISTANCE;
             this.renderHotbarItem(i1, j1, partialTicks, entityplayer, entityplayer.inventory.mainInventory.get(l + 27));
         }
 
@@ -68,7 +68,7 @@ public abstract class MixinGuiInGame extends Gui {
     private void moveUp() {
         if (LiteLoader.getInstance().getMod(LiteModExtendedHotbar.class).isEnabled()) {
             glPushMatrix();
-            glTranslated(0, distance, 0);
+            glTranslated(0, DISTANCE, 0);
         }
     }
 
@@ -99,9 +99,9 @@ public abstract class MixinGuiInGame extends Gui {
     }
 
     @ModifyArg(method = "renderGameOverlay", index = 2, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/FontRenderer;drawString(Ljava/lang/String;III)I"))
-    private int moveActionBarText(int y) {
+    private int moveActionBarText(final int y) {
         if (LiteLoader.getInstance().getMod(LiteModExtendedHotbar.class).isEnabled()) {
-            return y + distance;
+            return y + DISTANCE;
         } else {
             return y;
         }

@@ -33,21 +33,21 @@ public class LiteModExtendedHotbar implements Tickable {
 
     @Override
     public String getVersion() {
-        return "1.1.3";
+        return "1.1.4";
     }
 
     @Override
-    public void init(File configPath) {
+    public void init(final File configPath) {
         LiteLoader.getInput().registerKeyBinding(swapKeyBinding);
         LiteLoader.getInput().registerKeyBinding(toggleKeyBinding);
     }
 
     @Override
-    public void upgradeSettings(String version, File configPath, File oldConfigPath) {
+    public void upgradeSettings(final String version, final File configPath, final File oldConfigPath) {
     }
 
     @Override
-    public void onTick(Minecraft minecraft, float partialTicks, boolean inGame, boolean clock) {
+    public void onTick(final Minecraft minecraft, final float partialTicks, final boolean inGame, final boolean clock) {
         if (toggleKeyBinding.isPressed()) {
             enabled = !enabled;
             LiteLoader.getInstance().writeConfig(this);
@@ -69,7 +69,7 @@ public class LiteModExtendedHotbar implements Tickable {
             final int windowId = inventory.inventorySlots.windowId;
 
             if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)) {
-                int currentItem = minecraft.player.inventory.currentItem;
+                final int currentItem = minecraft.player.inventory.currentItem;
                 swapItem(minecraft, windowId, currentItem);
             } else {
                 for (int i = 0; i < 9; i++) {
@@ -81,7 +81,7 @@ public class LiteModExtendedHotbar implements Tickable {
         }
     }
 
-    private void swapItem(Minecraft minecraft, int windowId, int slotId) {
+    private void swapItem(final Minecraft minecraft, final int windowId, final int slotId) {
         minecraft.playerController.windowClick(windowId, slotId + 36, 0, ClickType.PICKUP, minecraft.player);
         minecraft.playerController.windowClick(windowId, 4, 0, ClickType.PICKUP, minecraft.player);
         minecraft.playerController.windowClick(windowId, slotId + 27, 0, ClickType.PICKUP, minecraft.player);
