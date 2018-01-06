@@ -141,13 +141,13 @@ public class LiteModExtendedHotbar implements Tickable, PlayerClickListener {
          */
 
         // Move hotbar item to crafting slot
-        minecraft.playerController.windowClick(windowId, slotId + LEFT_HOTBAR_SLOT_INDEX,     0, ClickType.PICKUP, minecraft.player);
-        minecraft.playerController.windowClick(windowId, BOTTOM_RIGHT_CRAFTING_SLOT_INDEX,    0, ClickType.PICKUP, minecraft.player);
+        minecraft.playerController.windowClick(windowId, slotId + LEFT_HOTBAR_SLOT_INDEX, 0, ClickType.PICKUP, minecraft.player);
+        minecraft.playerController.windowClick(windowId, BOTTOM_RIGHT_CRAFTING_SLOT_INDEX, 0, ClickType.PICKUP, minecraft.player);
         // Move bottom row item to hotbar
         minecraft.playerController.windowClick(windowId, slotId + LEFT_BOTTOM_ROW_SLOT_INDEX, 0, ClickType.PICKUP, minecraft.player);
-        minecraft.playerController.windowClick(windowId, slotId + LEFT_HOTBAR_SLOT_INDEX,     0, ClickType.PICKUP, minecraft.player);
+        minecraft.playerController.windowClick(windowId, slotId + LEFT_HOTBAR_SLOT_INDEX, 0, ClickType.PICKUP, minecraft.player);
         // Move crafting slot item to bottom row
-        minecraft.playerController.windowClick(windowId, BOTTOM_RIGHT_CRAFTING_SLOT_INDEX,    0, ClickType.PICKUP, minecraft.player);
+        minecraft.playerController.windowClick(windowId, BOTTOM_RIGHT_CRAFTING_SLOT_INDEX, 0, ClickType.PICKUP, minecraft.player);
         minecraft.playerController.windowClick(windowId, slotId + LEFT_BOTTOM_ROW_SLOT_INDEX, 0, ClickType.PICKUP, minecraft.player);
     }
 
