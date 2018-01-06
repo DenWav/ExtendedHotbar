@@ -4,7 +4,8 @@
   "package": "com.demonwav.extendedhotbar.mixin",
   "refmap": "mixins.extendedhotbar.refmap.json",
   "mixins": [
-    "MixinGuiInGame"
+    "MixinGuiInGame",
+    "MixinGuiContainerCreative"
   ],
   "injectors": {
     "defaultRequire": 1

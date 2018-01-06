@@ -1,5 +1,20 @@
 package com.demonwav.extendedhotbar.mixin;
 
+import static com.mumfrey.liteloader.gl.GL.GL_ONE;
+import static com.mumfrey.liteloader.gl.GL.GL_ONE_MINUS_SRC_ALPHA;
+import static com.mumfrey.liteloader.gl.GL.GL_SRC_ALPHA;
+import static com.mumfrey.liteloader.gl.GL.GL_ZERO;
+import static com.mumfrey.liteloader.gl.GL.glBlendFuncSeparate;
+import static com.mumfrey.liteloader.gl.GL.glColor4f;
+import static com.mumfrey.liteloader.gl.GL.glDisableBlend;
+import static com.mumfrey.liteloader.gl.GL.glDisableRescaleNormal;
+import static com.mumfrey.liteloader.gl.GL.glEnableBlend;
+import static com.mumfrey.liteloader.gl.GL.glEnableRescaleNormal;
+import static com.mumfrey.liteloader.gl.GL.glPopMatrix;
+import static com.mumfrey.liteloader.gl.GL.glPushMatrix;
+import static com.mumfrey.liteloader.gl.GL.glTranslated;
+
+import com.demonwav.extendedhotbar.LiteModExtendedHotbar;
 import com.mumfrey.liteloader.core.LiteLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -17,23 +32,43 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static com.mumfrey.liteloader.gl.GL.*;
-
-import com.demonwav.extendedhotbar.LiteModExtendedHotbar;
-
 @Mixin(GuiIngame.class)
 public abstract class MixinGuiInGame extends Gui {
 
     private static final int DISTANCE = -22;
+
+    private LiteModExtendedHotbar mod = null;
 
     @Shadow @Final private static ResourceLocation WIDGETS_TEX_PATH;
 
     @Shadow @Final private Minecraft mc;
     @Shadow protected abstract void renderHotbarItem(int p_184044_1_, int p_184044_2_, float p_184044_3_, EntityPlayer player, ItemStack stack);
 
+    /*
+     * This likely doesn't need to be thread-safe.
+     */
+    private LiteModExtendedHotbar getMod() {
+        LiteModExtendedHotbar m = this.mod;
+        if (m != null) {
+            return m;
+        }
+
+        synchronized (this) {
+            m = this.mod;
+            if (m != null) {
+                return m;
+            }
+
+            m = LiteLoader.getInstance().getMod(LiteModExtendedHotbar.class);
+            this.mod = m;
+        }
+
+        return m;
+    }
+
     @Inject(method = "renderHotbar", at = @At("RETURN"))
     private void drawTopHotbar(final ScaledResolution sr, final float partialTicks, final CallbackInfo info) {
-        if (!LiteLoader.getInstance().getMod(LiteModExtendedHotbar.class).isEnabled()) {
+        if (!getMod().isEnabled()) {
             return;
         }
 
@@ -66,14 +101,14 @@ public abstract class MixinGuiInGame extends Gui {
     }
 
     private void moveUp() {
-        if (LiteLoader.getInstance().getMod(LiteModExtendedHotbar.class).isEnabled()) {
+        if (getMod().isEnabled()) {
             glPushMatrix();
             glTranslated(0, DISTANCE, 0);
         }
     }
 
     private void reset() {
-        if (LiteLoader.getInstance().getMod(LiteModExtendedHotbar.class).isEnabled()) {
+        if (getMod().isEnabled()) {
             glPopMatrix();
         }
     }
@@ -100,7 +135,7 @@ public abstract class MixinGuiInGame extends Gui {
 
     @ModifyArg(method = "renderGameOverlay", index = 2, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/FontRenderer;drawString(Ljava/lang/String;III)I"))
     private int moveActionBarText(final int y) {
-        if (LiteLoader.getInstance().getMod(LiteModExtendedHotbar.class).isEnabled()) {
+        if (getMod().isEnabled()) {
             return y + DISTANCE;
         } else {
             return y;
