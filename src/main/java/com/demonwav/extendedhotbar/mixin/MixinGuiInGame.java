@@ -1,18 +1,6 @@
 package com.demonwav.extendedhotbar.mixin;
 
-import static com.mumfrey.liteloader.gl.GL.GL_ONE;
-import static com.mumfrey.liteloader.gl.GL.GL_ONE_MINUS_SRC_ALPHA;
-import static com.mumfrey.liteloader.gl.GL.GL_SRC_ALPHA;
-import static com.mumfrey.liteloader.gl.GL.GL_ZERO;
-import static com.mumfrey.liteloader.gl.GL.glBlendFuncSeparate;
-import static com.mumfrey.liteloader.gl.GL.glColor4f;
-import static com.mumfrey.liteloader.gl.GL.glDisableBlend;
-import static com.mumfrey.liteloader.gl.GL.glDisableRescaleNormal;
-import static com.mumfrey.liteloader.gl.GL.glEnableBlend;
-import static com.mumfrey.liteloader.gl.GL.glEnableRescaleNormal;
-import static com.mumfrey.liteloader.gl.GL.glPopMatrix;
-import static com.mumfrey.liteloader.gl.GL.glPushMatrix;
-import static com.mumfrey.liteloader.gl.GL.glTranslated;
+import static com.mumfrey.liteloader.gl.GL.*;
 
 import com.demonwav.extendedhotbar.LiteModExtendedHotbar;
 import com.mumfrey.liteloader.core.LiteLoader;
