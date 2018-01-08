@@ -50,7 +50,7 @@ public class LiteModExtendedHotbar implements Tickable, PlayerClickListener {
 
     @Override
     public String getVersion() {
-        return "1.1.5";
+        return "1.2.0";
     }
 
     @Override

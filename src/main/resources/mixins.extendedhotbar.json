@@ -3,11 +3,13 @@
   "minVersion": "0.7.1",
   "package": "com.demonwav.extendedhotbar.mixin",
   "refmap": "mixins.extendedhotbar.refmap.json",
-  "mixins": [
-    "MixinGuiInGame",
-    "MixinGuiContainerCreative"
+  "client": [
+    "MixinGuiIngame",
+    "MixinGuiContainerCreative",
+    "MixinGuiInGameForge"
   ],
   "injectors": {
-    "defaultRequire": 1
+    "defaultRequire": 1,
+    "maxShiftBy": 2
   }
 }

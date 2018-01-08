@@ -1,9 +1,11 @@
 package com.demonwav.extendedhotbar.mixin;
 
+import static com.demonwav.extendedhotbar.Util.DISTANCE;
+import static com.demonwav.extendedhotbar.Util.getMod;
+import static com.demonwav.extendedhotbar.Util.moveUp;
+import static com.demonwav.extendedhotbar.Util.reset;
 import static com.mumfrey.liteloader.gl.GL.*;
 
-import com.demonwav.extendedhotbar.LiteModExtendedHotbar;
-import com.mumfrey.liteloader.core.LiteLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiIngame;
@@ -21,38 +23,12 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GuiIngame.class)
-public abstract class MixinGuiInGame extends Gui {
-
-    private static final int DISTANCE = -22;
-
-    private LiteModExtendedHotbar mod = null;
+public abstract class MixinGuiIngame extends Gui {
 
     @Shadow @Final private static ResourceLocation WIDGETS_TEX_PATH;
 
     @Shadow @Final private Minecraft mc;
     @Shadow protected abstract void renderHotbarItem(int p_184044_1_, int p_184044_2_, float p_184044_3_, EntityPlayer player, ItemStack stack);
-
-    /*
-     * This likely doesn't need to be thread-safe.
-     */
-    private LiteModExtendedHotbar getMod() {
-        LiteModExtendedHotbar m = this.mod;
-        if (m != null) {
-            return m;
-        }
-
-        synchronized (this) {
-            m = this.mod;
-            if (m != null) {
-                return m;
-            }
-
-            m = LiteLoader.getInstance().getMod(LiteModExtendedHotbar.class);
-            this.mod = m;
-        }
-
-        return m;
-    }
 
     @Inject(method = "renderHotbar", at = @At("RETURN"))
     private void drawTopHotbar(final ScaledResolution sr, final float partialTicks, final CallbackInfo info) {
@@ -86,19 +62,6 @@ public abstract class MixinGuiInGame extends Gui {
         RenderHelper.disableStandardItemLighting();
         glDisableRescaleNormal();
         glDisableBlend();
-    }
-
-    private void moveUp() {
-        if (getMod().isEnabled()) {
-            glPushMatrix();
-            glTranslated(0, DISTANCE, 0);
-        }
-    }
-
-    private void reset() {
-        if (getMod().isEnabled()) {
-            glPopMatrix();
-        }
     }
 
     @Inject(
