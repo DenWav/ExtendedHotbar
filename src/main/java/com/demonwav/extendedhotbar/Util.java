@@ -1,51 +1,25 @@
 package com.demonwav.extendedhotbar;
 
-import static com.mumfrey.liteloader.gl.GL.glPopMatrix;
-import static com.mumfrey.liteloader.gl.GL.glPushMatrix;
-import static com.mumfrey.liteloader.gl.GL.glTranslated;
-
-import com.mumfrey.liteloader.core.LiteLoader;
+import net.minecraft.client.util.math.MatrixStack;
 
 public final class Util {
 
-    private static LiteModExtendedHotbar mod = null;
-
     public static final int DISTANCE = -22;
+
+    public static boolean enabled = true;
 
     private Util() {}
 
-    /*
-     * This likely doesn't need to be thread-safe.
-     */
-    public static LiteModExtendedHotbar getMod() {
-        LiteModExtendedHotbar m = Util.mod;
-        if (m != null) {
-            return m;
-        }
-
-        synchronized (Util.class) {
-            m = Util.mod;
-            if (m != null) {
-                return m;
-            }
-
-            m = LiteLoader.getInstance().getMod(LiteModExtendedHotbar.class);
-            Util.mod = m;
-        }
-
-        return m;
-    }
-
-    public static void moveUp() {
-        if (getMod().isEnabled()) {
-            glPushMatrix();
-            glTranslated(0, DISTANCE, 0);
+    public static void moveUp(MatrixStack matrixStack) {
+        if (enabled) {
+            matrixStack.push();
+            matrixStack.translate(0, DISTANCE, 0);
         }
     }
 
-    public static void reset() {
-        if (getMod().isEnabled()) {
-            glPopMatrix();
+    public static void reset(MatrixStack matrixStack) {
+        if (enabled) {
+            matrixStack.pop();
         }
     }
 }

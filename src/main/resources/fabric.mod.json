@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "extendedhotbar",
+  "version": "${version}",
+  "name": "ExtendedHotbar",
+  "description": "Place the bottom bar of the player's inventory above the hotbar.",
+  "authors": [
+    "DemonWav"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/extendedhotbar/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.demonwav.extendedhotbar.client.ExtendedHotbarClient"
+    ]
+  },
+  "mixins": [
+    "extendedhotbar.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.10.8",
+    "minecraft": ["1.16.2", "1.16.3","1.16.4"],
+    "fabric-key-binding-api-v1": "*"
+  }
+}

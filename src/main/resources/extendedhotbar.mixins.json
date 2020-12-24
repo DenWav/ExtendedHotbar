@@ -1,12 +1,11 @@
 {
   "required": true,
-  "minVersion": "0.7.1",
+  "minVersion": "0.8",
   "package": "com.demonwav.extendedhotbar.mixin",
-  "refmap": "mixins.extendedhotbar.refmap.json",
+  "compatibilityLevel": "JAVA_8",
   "client": [
-    "MixinGuiIngame",
-    "MixinGuiContainerCreative",
-    "MixinGuiInGameForge"
+    "MixinInGameHud",
+    "MixinCreativeInventoryScreen"
   ],
   "injectors": {
     "defaultRequire": 1,
