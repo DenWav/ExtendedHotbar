@@ -3,12 +3,13 @@ plugins {
     `maven-publish`
 }
 
-group = "com.demonwav"
-version = "1.0-SNAPSHOT"
-
+val modVersion: String by project
 val minecraftVersion: String by project
 val yarnMappings: String by project
 val loaderVersion: String by project
+
+group = "com.demonwav"
+version = modVersion
 
 val modInclude: Configuration by configurations.creating {
     exclude(group = "net.fabricmc.fabric-api")
