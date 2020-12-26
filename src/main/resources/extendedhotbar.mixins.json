@@ -4,8 +4,9 @@
   "package": "com.demonwav.extendedhotbar.mixin",
   "compatibilityLevel": "JAVA_8",
   "client": [
+    "MixinCreativeInventoryScreen",
     "MixinInGameHud",
-    "MixinCreativeInventoryScreen"
+    "MixinMinecraftClient"
   ],
   "injectors": {
     "defaultRequire": 1,
