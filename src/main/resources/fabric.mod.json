@@ -7,13 +7,20 @@
   "authors": [
     "DemonWav"
   ],
-  "contact": {},
+  "contact": {
+    "sources": "https://github.com/DemonWav/ExtendedHotbar",
+    "homepage": "https://github.com/DemonWav/ExtendedHotbar",
+    "issues": "https://github.com/DemonWav/ExtendedHotbar/issues"
+  },
   "license": "MIT",
   "icon": "assets/extendedhotbar/icon.png",
   "environment": "client",
   "entrypoints": {
     "client": [
       "com.demonwav.extendedhotbar.client.ExtendedHotbarClient"
+    ],
+    "modmenu": [
+      "com.demonwav.extendedhotbar.client.ExtendedHotbarMenu"
     ]
   },
   "mixins": [

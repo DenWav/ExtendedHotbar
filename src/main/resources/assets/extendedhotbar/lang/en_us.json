@@ -1,4 +1,12 @@
 {
-  "key.hotbar.switch": "Swap Hotbar",
-  "key.hotbar.toggle": "Toggle Extended Hotbar on and off"
+  "key.extendedhotbar.switch": "Swap Hotbar",
+  "key.extendedhotbar.toggle": "Toggle Extended Hotbar",
+  "key.extendedhotbar": "Extended Hotbar",
+  "text.autoconfig.extendedhotbar.title":  "Extended Hotbar",
+  "text.autoconfig.extendedhotbar.option.enabled": "Enabled",
+  "text.autoconfig.extendedhotbar.option.enabled.@Tooltip": "Toggle Extended Hotbar on and off",
+  "text.autoconfig.extendedhotbar.option.invert": "Invert full row / single item swap",
+  "text.autoconfig.extendedhotbar.option.invert.@Tooltip": "Invert full row / single item swap",
+  "text.autoconfig.extendedhotbar.option.enableModifier": "Enable shift modifier key",
+  "text.autoconfig.extendedhotbar.option.enableModifier.@Tooltip": "Enable holding shift to change item swap behavior"
 }

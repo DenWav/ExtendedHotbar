@@ -33,7 +33,7 @@ public abstract class MixinInGameHud extends DrawableHelper {
         )
     )
     private void drawTopHotbarBackground(final float f, final MatrixStack matrixStack, final CallbackInfo ci) {
-        if (Util.enabled) {
+        if (Util.isEnabled()) {
             final int i = this.scaledWidth / 2;
             this.drawTexture(matrixStack, i - 91, this.scaledHeight - 22 + Util.DISTANCE, 0, 0, 182, 22);
         }
@@ -54,7 +54,7 @@ public abstract class MixinInGameHud extends DrawableHelper {
                                     PlayerEntity player,
                                     ItemStack _0, Arm _1, int _2, int _3, // ignored locals
                                     int loopIndex, int x, int y) {
-        if (Util.enabled) {
+        if (Util.isEnabled()) {
             this.renderHotbarItem(x, y + Util.DISTANCE, partialTicks, player, player.inventory.main.get(loopIndex + 27));
         }
     }
@@ -96,7 +96,7 @@ public abstract class MixinInGameHud extends DrawableHelper {
 
     @ModifyArg(method = "render", index = 3, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/font/TextRenderer;draw(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/text/Text;FFI)I"))
     private float moveActionBarText(final float y) {
-        if (Util.enabled) {
+        if (Util.isEnabled()) {
             return y + Util.DISTANCE;
         } else {
             return y;

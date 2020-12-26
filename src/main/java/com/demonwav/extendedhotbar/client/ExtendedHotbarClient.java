@@ -1,7 +1,10 @@
 package com.demonwav.extendedhotbar.client;
 
+import com.demonwav.extendedhotbar.ModConfig;
 import com.demonwav.extendedhotbar.Util;
 import com.demonwav.extendedhotbar.mixin.MixinCreativeInventoryScreen;
+import me.sargunvohra.mcmods.autoconfig1u.AutoConfig;
+import me.sargunvohra.mcmods.autoconfig1u.serializer.Toml4jConfigSerializer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -24,17 +27,17 @@ import static org.lwjgl.glfw.GLFW.*;
 public class ExtendedHotbarClient implements ClientModInitializer {
 
     private static final KeyBinding swapKeyBinding = new KeyBinding(
-        "key.hotbar.switch",
+        "key.extendedhotbar.switch",
         InputUtil.Type.KEYSYM,
         GLFW_KEY_R,
-        "key.categories.inventory"
+        "key.extendedhotbar"
     );
 
     private static final KeyBinding toggleKeyBinding = new KeyBinding(
-        "key.hotbar.toggle",
+        "key.extendedhotbar.toggle",
         InputUtil.Type.KEYSYM,
-        GLFW_KEY_U,
-        "key.categories.inventory"
+        GLFW_KEY_EQUAL,
+        "key.extendedhotbar"
     );
 
     private static final int INVENTORY_TAB_INDEX = ItemGroup.INVENTORY.getIndex();
@@ -48,16 +51,20 @@ public class ExtendedHotbarClient implements ClientModInitializer {
         KeyBindingHelper.registerKeyBinding(swapKeyBinding);
         KeyBindingHelper.registerKeyBinding(toggleKeyBinding);
 
+        Util.configHolder = AutoConfig.register(ModConfig.class, Toml4jConfigSerializer::new);
+
         ClientTickEvents.END_CLIENT_TICK.register(this::onTick);
     }
 
     private void onTick(final MinecraftClient client) {
+        final ModConfig config = Util.configHolder.getConfig();
         if (toggleKeyBinding.wasPressed()) {
-            Util.enabled = !Util.enabled;
+            config.enabled = !config.enabled;
+            Util.configHolder.save();
             return;
         }
 
-        if (!Util.enabled) {
+        if (!config.enabled) {
             return;
         }
 
@@ -65,11 +72,23 @@ public class ExtendedHotbarClient implements ClientModInitializer {
             return;
         }
 
-        if (swapKeyBinding.wasPressed()) {
-            final long window = client.getWindow().getHandle();
-            final boolean shiftPressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS && glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) != GLFW_PRESS;
-            performSwap(client, shiftPressed);
+        if (!swapKeyBinding.wasPressed()) {
+            return;
         }
+
+        boolean singleSwap;
+        if (config.enableModifier) {
+            final long window = client.getWindow().getHandle();
+            singleSwap = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS && glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) != GLFW_PRESS;
+
+            if (config.invert) {
+                singleSwap = !singleSwap;
+            }
+        } else {
+            singleSwap = !config.invert;
+        }
+
+        performSwap(client, singleSwap);
     }
 
     private void performSwap(final MinecraftClient client, final boolean fullRow) {
