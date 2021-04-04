@@ -1,6 +1,6 @@
 plugins {
     id("fabric-loom") version "0.6.1"
-    `maven-publish`
+    id("org.cadixdev.licenser") version "0.5.1"
 }
 
 val modVersion: String by project
@@ -23,7 +23,6 @@ configurations.include {
 
 repositories {
     mavenCentral()
-    jcenter()
 }
 
 dependencies {
@@ -45,6 +44,10 @@ java {
     }
 }
 
+license {
+    header = file("header.txt")
+}
+
 tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
     options.release.set(8)
@@ -64,5 +67,5 @@ tasks.processResources {
 }
 
 tasks.jar {
-    from("LICENSE")
+    from("LICENSE", "COPYING.lesser")
 }
