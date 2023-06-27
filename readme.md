@@ -1,7 +1,7 @@
 Extended Hotbar
 ===============
 
-![](https://puu.sh/tgmIa/4e96c9ccca.png)
+![](example.png)
 
 Top bar is the bottom bar of the player's inventory.
 
