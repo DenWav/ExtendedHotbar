@@ -1,6 +1,6 @@
 /*
  * This file is part of ExtendedHotbar, a FabricMC mod.
- * Copyright (C) 2021 Kyle Wood (DemonWav)
+ * Copyright (C) 2023 Kyle Wood (DenWav)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -15,28 +15,20 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.demonwav.extendedhotbar.client;
+package dev.denwav.extendedhotbar.client;
 
-import com.demonwav.extendedhotbar.ModConfig;
-import com.demonwav.extendedhotbar.Util;
-import com.demonwav.extendedhotbar.mixin.MixinCreativeInventoryScreen;
-import me.sargunvohra.mcmods.autoconfig1u.AutoConfig;
-import me.sargunvohra.mcmods.autoconfig1u.serializer.Toml4jConfigSerializer;
+import dev.denwav.extendedhotbar.ModConfig;
+import dev.denwav.extendedhotbar.Util;
+import me.shedaniel.autoconfig.AutoConfig;
+import me.shedaniel.autoconfig.serializer.Toml4jConfigSerializer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ingame.CreativeInventoryScreen;
-import net.minecraft.client.gui.screen.ingame.InventoryScreen;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.network.ClientPlayerInteractionManager;
-import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.screen.slot.SlotActionType;
 
 import static org.lwjgl.glfw.GLFW.*;
 

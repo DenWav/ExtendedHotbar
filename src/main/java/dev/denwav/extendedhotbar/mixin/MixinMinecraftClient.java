@@ -1,6 +1,6 @@
 /*
  * This file is part of ExtendedHotbar, a FabricMC mod.
- * Copyright (C) 2021 Kyle Wood (DemonWav)
+ * Copyright (C) 2023 Kyle Wood (DenWav)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -15,9 +15,9 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.demonwav.extendedhotbar.mixin;
+package dev.denwav.extendedhotbar.mixin;
 
-import com.demonwav.extendedhotbar.Util;
+import dev.denwav.extendedhotbar.Util;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -68,8 +68,8 @@ public class MixinMinecraftClient {
             return;
         }
 
-        // If the block is in the hotbar, we do nothing and let Minecraft do it's thing
-        final PlayerInventory inventory = this.player.inventory;
+        // If the block is in the hotbar, we do nothing and let Minecraft do its thing
+        final PlayerInventory inventory = this.player.getInventory();
         for (int i = 0; i < 9; i++) {
             // While LEFT_HOTBAR_SLOT_INDEX is the base index for hotbar slots in the inventory gui, in InventoryPlayer,
             // the hotbar starts at 0

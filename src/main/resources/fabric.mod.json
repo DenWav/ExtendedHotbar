@@ -1,34 +1,34 @@
 {
   "schemaVersion": 1,
-  "id": "extendedhotbar",
+  "id": "extended-hotbar",
   "version": "${version}",
-  "name": "ExtendedHotbar",
+  "name": "Extended Hotbar",
   "description": "Place the bottom bar of the player's inventory above the hotbar.",
   "authors": [
-    "DemonWav"
+    "DenWav"
   ],
   "contact": {
-    "sources": "https://github.com/DemonWav/ExtendedHotbar",
-    "homepage": "https://github.com/DemonWav/ExtendedHotbar",
-    "issues": "https://github.com/DemonWav/ExtendedHotbar/issues"
+    "sources": "https://github.com/DenWav/ExtendedHotbar",
+    "homepage": "https://github.com/DenWav/ExtendedHotbar",
+    "issues": "https://github.com/DenWav/ExtendedHotbar/issues"
   },
-  "license": "MIT",
+  "license": "LGPL-3.0-only",
   "icon": "assets/extendedhotbar/icon.png",
   "environment": "client",
   "entrypoints": {
     "client": [
-      "com.demonwav.extendedhotbar.client.ExtendedHotbarClient"
+      "dev.denwav.extendedhotbar.client.ExtendedHotbarClient"
     ],
     "modmenu": [
-      "com.demonwav.extendedhotbar.client.ExtendedHotbarMenu"
+      "dev.denwav.extendedhotbar.client.ExtendedHotbarMenu"
     ]
   },
   "mixins": [
     "extendedhotbar.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.10.8",
-    "minecraft": ["1.16.2", "1.16.3","1.16.4"],
+    "fabricloader": ">=0.14.9",
+    "minecraft": ["1.20.1"],
     "fabric-key-binding-api-v1": "*"
   }
 }

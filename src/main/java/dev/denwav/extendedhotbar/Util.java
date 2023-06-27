@@ -1,6 +1,6 @@
 /*
  * This file is part of ExtendedHotbar, a FabricMC mod.
- * Copyright (C) 2021 Kyle Wood (DemonWav)
+ * Copyright (C) 2023 Kyle Wood (DenWav)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -15,10 +15,10 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.demonwav.extendedhotbar;
+package dev.denwav.extendedhotbar;
 
-import com.demonwav.extendedhotbar.mixin.MixinCreativeInventoryScreen;
-import me.sargunvohra.mcmods.autoconfig1u.ConfigHolder;
+import dev.denwav.extendedhotbar.mixin.MixinCreativeInventoryScreen;
+import me.shedaniel.autoconfig.ConfigHolder;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.CreativeInventoryScreen;
@@ -27,6 +27,8 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemGroup;
+import net.minecraft.item.ItemGroups;
+import net.minecraft.registry.Registries;
 import net.minecraft.screen.slot.SlotActionType;
 
 public final class Util {
@@ -35,8 +37,6 @@ public final class Util {
 
     private static final int LEFT_HOTBAR_SLOT_INDEX = 36;
     private static final int BOTTOM_RIGHT_CRAFTING_SLOT_INDEX = 4;
-
-    private static final int INVENTORY_TAB_INDEX = ItemGroup.INVENTORY.getIndex();
 
     public static final int DISTANCE = -22;
 
@@ -68,7 +68,7 @@ public final class Util {
         }
 
         final InventoryScreen inventory = new InventoryScreen(player);
-        client.openScreen(inventory);
+        client.setScreen(inventory);
 
         final Screen currentScreen = client.currentScreen;
         if (currentScreen == null) {
@@ -76,15 +76,14 @@ public final class Util {
         }
 
         // For the switcheroo to work, we need to be in the inventory window
-        final int index;
+        final ItemGroup group;
         if (currentScreen instanceof CreativeInventoryScreen) {
-            index = ((CreativeInventoryScreen) currentScreen).getSelectedTab();
-
-            if (index != Util.INVENTORY_TAB_INDEX) {
-                ((MixinCreativeInventoryScreen) currentScreen).callSetSelectedTab(ItemGroup.INVENTORY);
+            group = MixinCreativeInventoryScreen.getSelectedTab();
+            if (group.getType() != ItemGroup.Type.INVENTORY) {
+                ((MixinCreativeInventoryScreen) currentScreen).callSetSelectedTab(Registries.ITEM_GROUP.get(ItemGroups.INVENTORY));
             }
         } else {
-            index = -1;
+            group = null;
         }
 
         final int syncId = inventory.getScreenHandler().syncId;
@@ -94,16 +93,16 @@ public final class Util {
         } else {
             final ClientPlayerInteractionManager interactionManager = client.interactionManager;
             if (interactionManager != null) {
-                final int currentItem = player.inventory.selectedSlot;
+                final int currentItem = player.getInventory().selectedSlot;
                 swapItem(interactionManager, player, syncId, currentItem);
             }
         }
 
-        // If index == -1 then it's not a creative inventory, if it's INVENTORY_TAB_INDEX then there's no need to change it back to itself
-        if (index != -1 && index != Util.INVENTORY_TAB_INDEX) {
-            ((MixinCreativeInventoryScreen) currentScreen).callSetSelectedTab(ItemGroup.GROUPS[index]);
+        // If group == null then it's not a creative inventory, if its type is INVENTORY then there's no need to change it back to itself
+        if (group != null && group.getType() != ItemGroup.Type.INVENTORY) {
+            ((MixinCreativeInventoryScreen) currentScreen).callSetSelectedTab(group);
         }
-        client.openScreen(null);
+        client.setScreen(null);
     }
 
     private static void swapRows(final MinecraftClient client, final int syncId) {

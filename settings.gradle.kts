@@ -1,8 +1,7 @@
-rootProject.name = "extendedhotbar"
+rootProject.name = "ExtendedHotbar"
 
 pluginManagement {
     repositories {
-        jcenter()
         maven("https://maven.fabricmc.net/") {
             name = "Fabric"
         }

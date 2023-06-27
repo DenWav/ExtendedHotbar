@@ -1,6 +1,6 @@
 /*
  * This file is part of ExtendedHotbar, a FabricMC mod.
- * Copyright (C) 2021 Kyle Wood (DemonWav)
+ * Copyright (C) 2023 Kyle Wood (DenWav)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -15,21 +15,20 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.demonwav.extendedhotbar;
+package dev.denwav.extendedhotbar.client;
 
-import me.sargunvohra.mcmods.autoconfig1u.ConfigData;
-import me.sargunvohra.mcmods.autoconfig1u.annotation.Config;
-import me.sargunvohra.mcmods.autoconfig1u.annotation.ConfigEntry;
+import com.terraformersmc.modmenu.api.ConfigScreenFactory;
+import com.terraformersmc.modmenu.api.ModMenuApi;
+import dev.denwav.extendedhotbar.ModConfig;
+import me.shedaniel.autoconfig.AutoConfig;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-@Config(name = "extendedhotbar")
-public class ModConfig implements ConfigData {
+@Environment(EnvType.CLIENT)
+public class ExtendedHotbarMenu  implements ModMenuApi {
 
-    @ConfigEntry.Gui.Tooltip
-    public boolean enabled = true;
-
-    @ConfigEntry.Gui.Tooltip
-    public boolean invert = false;
-
-    @ConfigEntry.Gui.Tooltip
-    public boolean enableModifier = true;
+    @Override
+    public ConfigScreenFactory<?> getModConfigScreenFactory() {
+        return parent -> AutoConfig.getConfigScreen(ModConfig.class, parent).get();
+    }
 }

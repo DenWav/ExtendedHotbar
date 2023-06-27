@@ -1,6 +1,6 @@
 /*
  * This file is part of ExtendedHotbar, a FabricMC mod.
- * Copyright (C) 2021 Kyle Wood (DemonWav)
+ * Copyright (C) 2023 Kyle Wood (DenWav)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -15,12 +15,11 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.demonwav.extendedhotbar.mixin;
+package dev.denwav.extendedhotbar.mixin;
 
-import com.demonwav.extendedhotbar.Util;
-import net.minecraft.client.gui.DrawableHelper;
+import dev.denwav.extendedhotbar.Util;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Arm;
@@ -28,17 +27,18 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import static net.minecraft.client.gui.widget.ClickableWidget.WIDGETS_TEXTURE;
+
 @Mixin(InGameHud.class)
-public abstract class MixinInGameHud extends DrawableHelper {
+public abstract class MixinInGameHud {
 
     @Shadow private int scaledWidth;
     @Shadow private int scaledHeight;
 
-    @Shadow protected abstract void renderHotbarItem(final int i, final int j, final float f, final PlayerEntity playerEntity, final ItemStack itemStack);
+    @Shadow protected abstract void renderHotbarItem(DrawContext context, int x, int y, float f, PlayerEntity player, ItemStack stack, int seed);
 
     @Inject(
         method = "renderHotbar",
@@ -46,13 +46,13 @@ public abstract class MixinInGameHud extends DrawableHelper {
             value = "INVOKE",
             shift = At.Shift.AFTER,
             ordinal = 0,
-            target = "Lnet/minecraft/client/gui/hud/InGameHud;drawTexture(Lnet/minecraft/client/util/math/MatrixStack;IIIIII)V"
+            target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lnet/minecraft/util/Identifier;IIIIII)V"
         )
     )
-    private void drawTopHotbarBackground(final float f, final MatrixStack matrixStack, final CallbackInfo ci) {
+    private void drawTopHotbarBackground(final float tickDelta, final DrawContext context, final CallbackInfo ci) {
         if (Util.isEnabled()) {
             final int i = this.scaledWidth / 2;
-            this.drawTexture(matrixStack, i - 91, this.scaledHeight - 22 + Util.DISTANCE, 0, 0, 182, 22);
+            context.drawTexture(WIDGETS_TEXTURE, i - 91, this.scaledHeight - 22 + Util.DISTANCE, 0, 0, 182, 22);
         }
     }
 
@@ -62,17 +62,17 @@ public abstract class MixinInGameHud extends DrawableHelper {
             value = "INVOKE",
             shift = At.Shift.AFTER,
             ordinal = 0,
-            target = "Lnet/minecraft/client/gui/hud/InGameHud;renderHotbarItem(IIFLnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;)V"
+            target = "Lnet/minecraft/client/gui/hud/InGameHud;renderHotbarItem(Lnet/minecraft/client/gui/DrawContext;IIFLnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;I)V"
         ),
         locals = LocalCapture.CAPTURE_FAILEXCEPTION
     )
-    private void drawTopHotbarItems(final float partialTicks, final MatrixStack matrixStack, final CallbackInfo ci,
+    private void drawTopHotbarItems(final float tickDelta, final DrawContext context, final CallbackInfo ci,
                                     // locals
                                     PlayerEntity player,
-                                    ItemStack _0, Arm _1, int _2, int _3, // ignored locals
-                                    int loopIndex, int x, int y) {
+                                    ItemStack _itemStack, Arm _arm, int _i, int _j, int _k, // ignored locals
+                                    int seed, int loopIndex, int x, int y) {
         if (Util.isEnabled()) {
-            this.renderHotbarItem(x, y + Util.DISTANCE, partialTicks, player, player.inventory.main.get(loopIndex + 27));
+            this.renderHotbarItem(context, x, y + Util.DISTANCE, tickDelta, player, player.getInventory().main.get(loopIndex + 27), seed);
         }
     }
 
@@ -87,11 +87,11 @@ public abstract class MixinInGameHud extends DrawableHelper {
             @At(value = "RETURN", id = "return")
         }
     )
-    private void moveHud(final MatrixStack matrixStack, final CallbackInfo ci) {
+    private void moveHud(final DrawContext context, final CallbackInfo ci) {
         if ("move:head".equals(ci.getId())) {
-            Util.moveUp(matrixStack);
+            Util.moveUp(context.getMatrices());
         } else {
-            Util.reset(matrixStack);
+            Util.reset(context.getMatrices());
         }
     }
 
@@ -103,20 +103,11 @@ public abstract class MixinInGameHud extends DrawableHelper {
             @At(value = "RETURN", id = "return")
         }
     )
-    private void moveExpBar(final MatrixStack matrices, final int x, final CallbackInfo ci) {
+    private void moveExpBar(final DrawContext context, final int x, final CallbackInfo ci) {
         if ("move:head".equals(ci.getId())) {
-            Util.moveUp(matrices);
+            Util.moveUp(context.getMatrices());
         } else {
-            Util.reset(matrices);
-        }
-    }
-
-    @ModifyArg(method = "render", index = 3, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/font/TextRenderer;draw(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/text/Text;FFI)I"))
-    private float moveActionBarText(final float y) {
-        if (Util.isEnabled()) {
-            return y + Util.DISTANCE;
-        } else {
-            return y;
+            Util.reset(context.getMatrices());
         }
     }
 }
