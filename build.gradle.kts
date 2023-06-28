@@ -63,5 +63,5 @@ tasks.processResources {
 }
 
 tasks.jar {
-    from("LICENSE", "COPYING.lesser")
+    from("license.txt")
 }
