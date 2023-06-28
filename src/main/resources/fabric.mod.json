@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "extended-hotbar",
+  "id": "extendedhotbar",
   "version": "${version}",
   "name": "Extended Hotbar",
   "description": "Place the bottom bar of the player's inventory above the hotbar.",
