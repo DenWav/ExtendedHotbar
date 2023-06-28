@@ -1,7 +1,7 @@
 Extended Hotbar
 ===============
 
-![](example.png)
+![GIF shows the hotbar swapping mechanic, with both full and individual item swaps.](example.gif "Mod Example GIF")
 
 Top bar is the bottom bar of the player's inventory.
 
