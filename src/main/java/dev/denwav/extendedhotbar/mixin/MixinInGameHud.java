@@ -20,6 +20,7 @@ package dev.denwav.extendedhotbar.mixin;
 import dev.denwav.extendedhotbar.Util;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
+import net.minecraft.entity.JumpingMount;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Arm;
@@ -77,10 +78,28 @@ public abstract class MixinInGameHud {
     }
 
     @Inject(
+        method = "render",
+        at = @At(
+            value = "INVOKE",
+            shift = At.Shift.AFTER,
+                ordinal = 0,
+                target = "Lnet/minecraft/client/util/math/MatrixStack;translate(FFF)V"
+        )
+    )
+    private void moveActionBarTextUp(final DrawContext context, final float tickDelta, final CallbackInfo ci) {
+        // We don't need to push a matrix or reset, because the surrounding code we are injecting in
+        // to does that for us.
+        if (Util.isEnabled()) {
+            context.getMatrices().translate(0, Util.DISTANCE, 0);
+        }
+    }
+
+    @Inject(
         id = "move",
         method = {
+            "renderMountHealth",
             "renderStatusBars",
-            "renderHeldItemTooltip"
+            "renderHeldItemTooltip",
         },
         at = {
             @At(value = "HEAD", id = "head"),
@@ -104,6 +123,22 @@ public abstract class MixinInGameHud {
         }
     )
     private void moveExpBar(final DrawContext context, final int x, final CallbackInfo ci) {
+        if ("move:head".equals(ci.getId())) {
+            Util.moveUp(context.getMatrices());
+        } else {
+            Util.reset(context.getMatrices());
+        }
+    }
+
+    @Inject(
+        id = "move",
+        method = "renderMountJumpBar",
+        at = {
+            @At(value = "HEAD", id = "head"),
+            @At(value = "RETURN", id = "return")
+        }
+    )
+    private void moveMountJumpBarUp(final JumpingMount mount, final DrawContext context, final int x, final CallbackInfo ci) {
         if ("move:head".equals(ci.getId())) {
             Util.moveUp(context.getMatrices());
         } else {
