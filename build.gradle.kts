@@ -34,7 +34,7 @@ dependencies {
     modImplementation("net.fabricmc.fabric-api:fabric-api:0.84.0+1.20.1")
 
     modInclude("me.shedaniel.cloth:cloth-config-fabric:11.0.99")
-    modImplementation("com.terraformersmc:modmenu:7.1.0")
+    modImplementation("com.terraformersmc:modmenu:7.2.1")
 }
 
 java {
