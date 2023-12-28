@@ -1,5 +1,5 @@
 plugins {
-    id("fabric-loom") version "1.2.7"
+    id("fabric-loom") version "1.4.5"
     id("org.cadixdev.licenser") version "0.6.1"
 }
 
@@ -41,7 +41,7 @@ java {
     withSourcesJar()
 
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 
@@ -51,7 +51,7 @@ license {
 
 tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
-    options.release.set(17)
+    options.release = 17
 }
 
 tasks.processResources {
