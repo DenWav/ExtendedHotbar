@@ -4,7 +4,6 @@
   "package": "dev.denwav.extendedhotbar.mixin",
   "compatibilityLevel": "JAVA_17",
   "client": [
-    "MixinCreativeInventoryScreen",
     "MixinInGameHud",
     "MixinMinecraftClient"
   ],

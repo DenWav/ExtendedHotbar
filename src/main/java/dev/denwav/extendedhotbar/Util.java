@@ -17,18 +17,13 @@
 
 package dev.denwav.extendedhotbar;
 
-import dev.denwav.extendedhotbar.mixin.MixinCreativeInventoryScreen;
 import me.shedaniel.autoconfig.ConfigHolder;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ingame.CreativeInventoryScreen;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemGroups;
-import net.minecraft.registry.Registries;
+import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.SlotActionType;
 
 public final class Util {
@@ -67,42 +62,25 @@ public final class Util {
             return;
         }
 
-        final InventoryScreen inventory = new InventoryScreen(player);
-        client.setScreen(inventory);
+        final ScreenHandler oldHandler = player.currentScreenHandler;
+        try {
+            final InventoryScreen inventory = new InventoryScreen(player);
 
-        final Screen currentScreen = client.currentScreen;
-        if (currentScreen == null) {
-            return;
-        }
+            final int syncId = inventory.getScreenHandler().syncId;
+            player.currentScreenHandler = inventory.getScreenHandler();
 
-        // For the switcheroo to work, we need to be in the inventory window
-        final ItemGroup group;
-        if (currentScreen instanceof CreativeInventoryScreen) {
-            group = MixinCreativeInventoryScreen.getSelectedTab();
-            if (group.getType() != ItemGroup.Type.INVENTORY) {
-                ((MixinCreativeInventoryScreen) currentScreen).callSetSelectedTab(Registries.ITEM_GROUP.get(ItemGroups.INVENTORY));
+            if (fullRow) {
+                swapRows(client, syncId);
+            } else {
+                final ClientPlayerInteractionManager interactionManager = client.interactionManager;
+                if (interactionManager != null) {
+                    final int currentItem = player.getInventory().selectedSlot;
+                    swapItem(interactionManager, player, syncId, currentItem);
+                }
             }
-        } else {
-            group = null;
+        } finally {
+            player.currentScreenHandler = oldHandler;
         }
-
-        final int syncId = inventory.getScreenHandler().syncId;
-
-        if (fullRow) {
-            swapRows(client, syncId);
-        } else {
-            final ClientPlayerInteractionManager interactionManager = client.interactionManager;
-            if (interactionManager != null) {
-                final int currentItem = player.getInventory().selectedSlot;
-                swapItem(interactionManager, player, syncId, currentItem);
-            }
-        }
-
-        // If group == null then it's not a creative inventory, if its type is INVENTORY then there's no need to change it back to itself
-        if (group != null && group.getType() != ItemGroup.Type.INVENTORY) {
-            ((MixinCreativeInventoryScreen) currentScreen).callSetSelectedTab(group);
-        }
-        client.setScreen(null);
     }
 
     private static void swapRows(final MinecraftClient client, final int syncId) {
