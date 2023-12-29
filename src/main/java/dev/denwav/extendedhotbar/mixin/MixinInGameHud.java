@@ -17,61 +17,73 @@
 
 package dev.denwav.extendedhotbar.mixin;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import dev.denwav.extendedhotbar.Util;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.entity.JumpingMount;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.Arm;
+import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
-
-import static net.minecraft.client.gui.widget.ClickableWidget.WIDGETS_TEXTURE;
 
 @Mixin(InGameHud.class)
 public abstract class MixinInGameHud {
 
-    @Shadow private int scaledWidth;
-    @Shadow private int scaledHeight;
-
     @Shadow protected abstract void renderHotbarItem(DrawContext context, int x, int y, float f, PlayerEntity player, ItemStack stack, int seed);
 
-    @Inject(
+    @WrapOperation(
         method = "renderHotbar",
         at = @At(
             value = "INVOKE",
-            shift = At.Shift.AFTER,
             ordinal = 0,
-            target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lnet/minecraft/util/Identifier;IIIIII)V"
+            target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIII)V"
         )
     )
-    private void drawTopHotbarBackground(final float tickDelta, final DrawContext context, final CallbackInfo ci) {
+    private void drawTopHotbarBackground(
+        final DrawContext context,
+        final Identifier texture,
+        final int x,
+        final int y,
+        final int width,
+        final int height,
+        final Operation<Void> original
+    ) {
+        original.call(context, texture, x, y, width, height);
+
         if (Util.isEnabled()) {
-            final int i = this.scaledWidth / 2;
-            context.drawTexture(WIDGETS_TEXTURE, i - 91, this.scaledHeight - 22 + Util.DISTANCE, 0, 0, 182, 22);
+            context.drawGuiTexture(texture, x, y + Util.DISTANCE, width, height);
         }
     }
 
-    @Inject(
+    @WrapOperation(
         method = "renderHotbar",
         at = @At(
             value = "INVOKE",
-            shift = At.Shift.AFTER,
             ordinal = 0,
             target = "Lnet/minecraft/client/gui/hud/InGameHud;renderHotbarItem(Lnet/minecraft/client/gui/DrawContext;IIFLnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;I)V"
-        ),
-        locals = LocalCapture.CAPTURE_FAILEXCEPTION
+        )
     )
-    private void drawTopHotbarItems(final float tickDelta, final DrawContext context, final CallbackInfo ci,
-                                    // locals
-                                    PlayerEntity player,
-                                    ItemStack _itemStack, Arm _arm, int _i, int _j, int _k, // ignored locals
-                                    int seed, int loopIndex, int x, int y) {
+    private void drawTopHotbarItem(
+        final InGameHud instance,
+        final DrawContext context,
+        final int x,
+        final int y,
+        final float tickDelta,
+        final PlayerEntity player,
+        final ItemStack stack,
+        final int seed,
+        final Operation<Void> original,
+        @Local(ordinal = 4) final int loopIndex
+    ) {
+        original.call(instance, context, x, y, tickDelta, player, stack, seed);
+
         if (Util.isEnabled()) {
             this.renderHotbarItem(context, x, y + Util.DISTANCE, tickDelta, player, player.getInventory().main.get(loopIndex + 27), seed);
         }
@@ -82,8 +94,8 @@ public abstract class MixinInGameHud {
         at = @At(
             value = "INVOKE",
             shift = At.Shift.AFTER,
-                ordinal = 0,
-                target = "Lnet/minecraft/client/util/math/MatrixStack;translate(FFF)V"
+            ordinal = 0,
+            target = "Lnet/minecraft/client/util/math/MatrixStack;translate(FFF)V"
         )
     )
     private void moveActionBarTextUp(final DrawContext context, final float tickDelta, final CallbackInfo ci) {
