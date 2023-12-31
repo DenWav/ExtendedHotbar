@@ -15,7 +15,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package dev.denwav.extendedhotbar.mixin;
+package dev.denwav.extendedhotbar.mixin.swapping;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -34,7 +34,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(InGameHud.class)
-public abstract class MixinInGameHud {
+public abstract class MixinInGameHudSwapping {
 
     @Shadow protected abstract void renderHotbarItem(DrawContext context, int x, int y, float f, PlayerEntity player, ItemStack stack, int seed);
 
@@ -57,7 +57,7 @@ public abstract class MixinInGameHud {
     ) {
         original.call(context, texture, x, y, width, height);
 
-        if (Util.isEnabled()) {
+        if (Util.isSwappingEnabled()) {
             context.drawGuiTexture(texture, x, y + Util.DISTANCE, width, height);
         }
     }
@@ -84,8 +84,8 @@ public abstract class MixinInGameHud {
     ) {
         original.call(instance, context, x, y, tickDelta, player, stack, seed);
 
-        if (Util.isEnabled()) {
-            this.renderHotbarItem(context, x, y + Util.DISTANCE, tickDelta, player, player.getInventory().main.get(loopIndex + 27), seed);
+        if (Util.isSwappingEnabled()) {
+            this.renderHotbarItem(context, x, y + Util.DISTANCE, tickDelta, player, player.getInventory().main.get(loopIndex + Util.SLOT_OFFSET), seed);
         }
     }
 
@@ -101,7 +101,7 @@ public abstract class MixinInGameHud {
     private void moveActionBarTextUp(final DrawContext context, final float tickDelta, final CallbackInfo ci) {
         // We don't need to push a matrix or reset, because the surrounding code we are injecting in
         // to does that for us.
-        if (Util.isEnabled()) {
+        if (Util.isSwappingEnabled()) {
             context.getMatrices().translate(0, Util.DISTANCE, 0);
         }
     }
@@ -119,10 +119,12 @@ public abstract class MixinInGameHud {
         }
     )
     private void moveHud(final DrawContext context, final CallbackInfo ci) {
-        if ("move:head".equals(ci.getId())) {
-            Util.moveUp(context.getMatrices());
-        } else {
-            Util.reset(context.getMatrices());
+        if (Util.isSwappingEnabled()) {
+            if ("move:head".equals(ci.getId())) {
+                Util.moveUp(context.getMatrices());
+            } else {
+                Util.reset(context.getMatrices());
+            }
         }
     }
 
@@ -135,10 +137,12 @@ public abstract class MixinInGameHud {
         }
     )
     private void moveExpBar(final DrawContext context, final int x, final CallbackInfo ci) {
-        if ("move:head".equals(ci.getId())) {
-            Util.moveUp(context.getMatrices());
-        } else {
-            Util.reset(context.getMatrices());
+        if (Util.isSwappingEnabled()) {
+            if ("move:head".equals(ci.getId())) {
+                Util.moveUp(context.getMatrices());
+            } else {
+                Util.reset(context.getMatrices());
+            }
         }
     }
 
@@ -151,10 +155,12 @@ public abstract class MixinInGameHud {
         }
     )
     private void moveMountJumpBarUp(final JumpingMount mount, final DrawContext context, final int x, final CallbackInfo ci) {
-        if ("move:head".equals(ci.getId())) {
-            Util.moveUp(context.getMatrices());
-        } else {
-            Util.reset(context.getMatrices());
+        if (Util.isSwappingEnabled()) {
+            if ("move:head".equals(ci.getId())) {
+                Util.moveUp(context.getMatrices());
+            } else {
+                Util.reset(context.getMatrices());
+            }
         }
     }
 }

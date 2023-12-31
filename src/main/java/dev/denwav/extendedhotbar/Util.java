@@ -23,7 +23,6 @@ import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.SlotActionType;
 
 public final class Util {
@@ -35,7 +34,13 @@ public final class Util {
 
     public static final int DISTANCE = -22;
 
+    public static final int SLOT_OFFSET = LEFT_BOTTOM_ROW_SLOT_INDEX;
+
     public static ConfigHolder<ModConfig> configHolder = null;
+
+    public static ConfigHolder<ExtendedHotbarState> stateHolder = null;
+
+    private static boolean swapRender = false;
 
     private Util() {}
 
@@ -43,17 +48,74 @@ public final class Util {
         return configHolder != null && configHolder.getConfig().enabled;
     }
 
-    public static void moveUp(MatrixStack matrixStack) {
-        if (isEnabled()) {
-            matrixStack.push();
-            matrixStack.translate(0, DISTANCE, 0);
+    public static boolean isSwappingEnabled() {
+        if (configHolder == null) {
+            return false;
+        }
+        final ModConfig config = configHolder.getConfig();
+        return config.enabled && !config.fluent;
+    }
+
+    public static boolean isFluent() {
+        if (configHolder == null) {
+            return false;
+        }
+        final ModConfig config = configHolder.getConfig();
+        return config.enabled && config.fluent;
+    }
+
+    public static ExtendedHotbarState.Position getFluentPosition() {
+        if (stateHolder == null) {
+            return ExtendedHotbarState.Position.LEFT;
+        }
+        return stateHolder.getConfig().position;
+    }
+
+    public static ExtendedHotbarState.Position getRenderedFluentPosition() {
+        if (stateHolder == null) {
+            return ExtendedHotbarState.Position.LEFT;
+        }
+        final ExtendedHotbarState state = stateHolder.getConfig();
+        if (swapRender) {
+            return switch (state.position) {
+                case LEFT -> ExtendedHotbarState.Position.RIGHT ;
+                case RIGHT -> ExtendedHotbarState.Position.LEFT;
+            };
+        } else {
+            return state.position;
         }
     }
 
-    public static void reset(MatrixStack matrixStack) {
-        if (isEnabled()) {
-            matrixStack.pop();
+    public static void swapRenderedPosition() {
+        swapRender = true;
+    }
+
+    public static boolean isRenderSwapped() {
+        return swapRender;
+    }
+
+    public static void resetRenderedPosition() {
+        swapRender = false;
+    }
+
+    public static void switchFluentPosition() {
+        if (stateHolder == null) {
+            return;
         }
+        stateHolder.getConfig().position = switch (stateHolder.getConfig().position) {
+            case LEFT -> ExtendedHotbarState.Position.RIGHT;
+            case RIGHT -> ExtendedHotbarState.Position.LEFT;
+        };
+        stateHolder.save();
+    }
+
+    public static void moveUp(final MatrixStack matrixStack) {
+        matrixStack.push();
+        matrixStack.translate(0, DISTANCE, 0);
+    }
+
+    public static void reset(final MatrixStack matrixStack) {
+        matrixStack.pop();
     }
 
     public static void performSwap(final MinecraftClient client, final boolean fullRow) {
@@ -62,24 +124,17 @@ public final class Util {
             return;
         }
 
-        final ScreenHandler oldHandler = player.currentScreenHandler;
-        try {
-            final InventoryScreen inventory = new InventoryScreen(player);
+        final InventoryScreen inventory = new InventoryScreen(player);
+        final int syncId = inventory.getScreenHandler().syncId;
 
-            final int syncId = inventory.getScreenHandler().syncId;
-            player.currentScreenHandler = inventory.getScreenHandler();
-
-            if (fullRow) {
-                swapRows(client, syncId);
-            } else {
-                final ClientPlayerInteractionManager interactionManager = client.interactionManager;
-                if (interactionManager != null) {
-                    final int currentItem = player.getInventory().selectedSlot;
-                    swapItem(interactionManager, player, syncId, currentItem);
-                }
+        if (fullRow) {
+            swapRows(client, syncId);
+        } else {
+            final ClientPlayerInteractionManager interactionManager = client.interactionManager;
+            if (interactionManager != null) {
+                final int currentItem = player.getInventory().selectedSlot;
+                swapItem(interactionManager, player, syncId, currentItem);
             }
-        } finally {
-            player.currentScreenHandler = oldHandler;
         }
     }
 
@@ -95,7 +150,12 @@ public final class Util {
         }
     }
 
-    private static void swapItem(final ClientPlayerInteractionManager interactionManager, ClientPlayerEntity player, final int syncId, final int slotId) {
+    private static void swapItem(
+        final ClientPlayerInteractionManager interactionManager,
+        final ClientPlayerEntity player,
+        final int syncId,
+        final int slotId
+    ) {
         /*
          * Implementation note:
          * There are fancy click mechanisms to swap item stacks without using a temporary slot, but when swapping between two identical item

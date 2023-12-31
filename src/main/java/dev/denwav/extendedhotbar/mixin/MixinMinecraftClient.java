@@ -36,7 +36,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(MinecraftClient.class)
-public class MixinMinecraftClient {
+public abstract class MixinMinecraftClient {
 
     @Shadow public Screen currentScreen;
     @Shadow public HitResult crosshairTarget;
@@ -92,6 +92,9 @@ public class MixinMinecraftClient {
                 continue;
             }
 
+            if (Util.isFluent()) {
+                Util.switchFluentPosition();
+            }
             Util.performSwap((MinecraftClient) (Object) this, true);
             break;
         }

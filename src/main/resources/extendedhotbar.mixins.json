@@ -4,8 +4,11 @@
   "package": "dev.denwav.extendedhotbar.mixin",
   "compatibilityLevel": "JAVA_17",
   "client": [
-    "MixinInGameHud",
-    "MixinMinecraftClient"
+    "MixinMinecraftClient",
+    "fluent.MixinInGameHudFluent",
+    "fluent.MixinMinecraftClientFluent",
+    "fluent.MixinPlayerInventoryFluent",
+    "swapping.MixinInGameHudSwapping"
   ],
   "injectors": {
     "defaultRequire": 1,

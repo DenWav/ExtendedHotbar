@@ -17,6 +17,7 @@
 
 package dev.denwav.extendedhotbar.client;
 
+import dev.denwav.extendedhotbar.ExtendedHotbarState;
 import dev.denwav.extendedhotbar.ModConfig;
 import dev.denwav.extendedhotbar.Util;
 import me.shedaniel.autoconfig.AutoConfig;
@@ -26,7 +27,13 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.ingame.AbstractInventoryScreen;
+import net.minecraft.client.gui.screen.ingame.CreativeInventoryScreen;
+import net.minecraft.client.gui.screen.ingame.HorseScreen;
+import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 
@@ -55,8 +62,11 @@ public class ExtendedHotbarClient implements ClientModInitializer {
         KeyBindingHelper.registerKeyBinding(toggleKeyBinding);
 
         Util.configHolder = AutoConfig.register(ModConfig.class, Toml4jConfigSerializer::new);
+        // Use "config" to hold state because it's simple
+        Util.stateHolder = AutoConfig.register(ExtendedHotbarState.class, Toml4jConfigSerializer::new);
 
         ClientTickEvents.END_CLIENT_TICK.register(this::onTick);
+        ScreenEvents.BEFORE_INIT.register(this::onScreenOpen);
     }
 
     private void onTick(final MinecraftClient client) {
@@ -67,7 +77,7 @@ public class ExtendedHotbarClient implements ClientModInitializer {
             return;
         }
 
-        if (!config.enabled) {
+        if (!config.enabled || config.fluent) {
             return;
         }
 
@@ -92,5 +102,34 @@ public class ExtendedHotbarClient implements ClientModInitializer {
         }
 
         Util.performSwap(client, singleSwap);
+    }
+
+    private void onScreenOpen(
+        final MinecraftClient client,
+        final Screen screen,
+        final int scaledWidth,
+        final int scaledHeight
+    ) {
+        if (!(screen instanceof AbstractInventoryScreen<?>) && !(screen instanceof HorseScreen)) {
+            return;
+        }
+        final ClientPlayerInteractionManager manager = client.interactionManager;
+        if (manager != null && manager.hasCreativeInventory()) {
+            if (!(screen instanceof CreativeInventoryScreen)) {
+                // Creative inventories are opened after the normal inventory is opened, so we want to ignore when
+                // the first one closes (the non-creative inventory).
+                // It goes setScreen(InventoryScreen) -> InventoryScreen.init() -> setScreen(CreativeInventoryScreen)
+                return;
+            }
+        }
+        ScreenEvents.remove(screen).register(this::onScreenClose);
+    }
+
+    private void onScreenClose(final Screen screen) {
+        if (Util.isRenderSwapped()) {
+            // swap back
+            Util.resetRenderedPosition();
+            Util.performSwap(MinecraftClient.getInstance(), true);
+        }
     }
 }
