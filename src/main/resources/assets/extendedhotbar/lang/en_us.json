@@ -7,6 +7,8 @@
   "text.autoconfig.extendedhotbar.option.enabled.@Tooltip": "Toggle Extended Hotbar on and off",
   "text.autoconfig.extendedhotbar.option.invert": "Invert full row / single item swap",
   "text.autoconfig.extendedhotbar.option.invert.@Tooltip": "Invert full row / single item swap",
+  "text.autoconfig.extendedhotbar.option.enableDoubleTap": "Enable double-tap to swap",
+  "text.autoconfig.extendedhotbar.option.enableDoubleTap.@Tooltip": "Enable double-tapping a hotbar slot key to swap only that hotbar slot",
   "text.autoconfig.extendedhotbar.option.enableModifier": "Enable shift modifier key",
   "text.autoconfig.extendedhotbar.option.enableModifier.@Tooltip": "Enable holding shift to change item swap behavior",
   "text.autoconfig.extendedhotbar.option.fluent": "Enable fluent mode (disables manual swapping)",
