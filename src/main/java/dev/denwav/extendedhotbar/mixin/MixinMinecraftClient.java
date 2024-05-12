@@ -92,6 +92,9 @@ public class MixinMinecraftClient {
                 continue;
             }
 
+            if (Util.isFluent()) {
+                Util.switchFluentPosition();
+            }
             Util.performSwap((MinecraftClient) (Object) this, true);
             break;
         }

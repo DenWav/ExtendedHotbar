@@ -1,5 +1,7 @@
+import org.gradle.jvm.tasks.Jar
+
 plugins {
-    id("fabric-loom") version "1.4.5"
+    id("fabric-loom") version "1.6.9"
     id("org.cadixdev.licenser") version "0.6.1"
 }
 
@@ -31,7 +33,7 @@ dependencies {
     minecraft("com.mojang:minecraft:$minecraftVersion")
     mappings("net.fabricmc:yarn:$yarnMappings:v2")
     modImplementation("net.fabricmc:fabric-loader:$loaderVersion")
-    modImplementation("net.fabricmc.fabric-api:fabric-api:0.84.0+1.20.1")
+    modImplementation("net.fabricmc.fabric-api:fabric-api:0.92.0+1.20.1")
 
     modInclude("me.shedaniel.cloth:cloth-config-fabric:11.0.99")
     modImplementation("com.terraformersmc:modmenu:7.2.1")
@@ -64,4 +66,8 @@ tasks.processResources {
 
 tasks.jar {
     from("license.txt")
+}
+
+tasks.withType<Jar>().configureEach {
+    archiveAppendix = minecraftVersion
 }

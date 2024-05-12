@@ -19,20 +19,14 @@ package dev.denwav.extendedhotbar;
 
 import me.shedaniel.autoconfig.ConfigData;
 import me.shedaniel.autoconfig.annotation.Config;
-import me.shedaniel.autoconfig.annotation.ConfigEntry;
 
-@Config(name = "extendedhotbar")
-public class ModConfig implements ConfigData {
+@Config(name = "extendedhotbar.fluent")
+public class ExtendedHotbarState implements ConfigData {
 
-    @ConfigEntry.Gui.Tooltip
-    public boolean enabled = true;
+    public Position position = Position.LEFT;
 
-    @ConfigEntry.Gui.Tooltip
-    public boolean invert = false;
-
-    @ConfigEntry.Gui.Tooltip
-    public boolean enableModifier = false;
-
-    @ConfigEntry.Gui.Tooltip
-    public boolean fluent = false;
+    public enum Position {
+        LEFT,
+        RIGHT,
+    }
 }
