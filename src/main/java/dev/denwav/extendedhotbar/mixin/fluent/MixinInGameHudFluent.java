@@ -24,6 +24,7 @@ import dev.denwav.extendedhotbar.ExtendedHotbarState.Position;
 import dev.denwav.extendedhotbar.Util;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
+import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
@@ -36,7 +37,7 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 @Mixin(InGameHud.class)
 public abstract class MixinInGameHudFluent {
 
-    @Shadow protected abstract void renderHotbarItem(DrawContext context, int x, int y, float f, PlayerEntity player, ItemStack stack, int seed);
+    @Shadow protected abstract void renderHotbarItem(DrawContext context, int x, int y, RenderTickCounter tickCounter, PlayerEntity player, ItemStack stack, int seed);
 
     @Unique private int offset;
 
@@ -95,7 +96,7 @@ public abstract class MixinInGameHudFluent {
         at = @At(
             value = "INVOKE",
             ordinal = 0,
-            target = "Lnet/minecraft/client/gui/hud/InGameHud;renderHotbarItem(Lnet/minecraft/client/gui/DrawContext;IIFLnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;I)V"
+            target = "Lnet/minecraft/client/gui/hud/InGameHud;renderHotbarItem(Lnet/minecraft/client/gui/DrawContext;IILnet/minecraft/client/render/RenderTickCounter;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;I)V"
         )
     )
     private void drawExtraHotbarItem(
@@ -103,7 +104,7 @@ public abstract class MixinInGameHudFluent {
         final DrawContext context,
         final int x,
         final int y,
-        final float tickDelta,
+        final RenderTickCounter tickCounter,
         final PlayerEntity player,
         final ItemStack stack,
         final int seed,
@@ -111,7 +112,7 @@ public abstract class MixinInGameHudFluent {
         @Local(ordinal = 4) final int loopIndex
     ) {
         if (this.offset == 0) {
-            original.call(instance, context, x, y, tickDelta, player, stack, seed);
+            original.call(instance, context, x, y, tickCounter, player, stack, seed);
             return;
         }
 
@@ -131,8 +132,8 @@ public abstract class MixinInGameHudFluent {
             default -> throw new IllegalStateException("unknown position");
         }
 
-        original.call(instance, context, originalX, y, tickDelta, player, stack, seed);
-        this.renderHotbarItem(context, newX, y, tickDelta, player, player.getInventory().main.get(loopIndex + Util.SLOT_OFFSET), seed);
+        original.call(instance, context, originalX, y, tickCounter, player, stack, seed);
+        this.renderHotbarItem(context, newX, y, tickCounter, player, player.getInventory().main.get(loopIndex + Util.SLOT_OFFSET), seed);
     }
 
     @ModifyArg(
@@ -153,7 +154,7 @@ public abstract class MixinInGameHudFluent {
         at = @At(
             value = "INVOKE",
             ordinal = 1,
-            target = "Lnet/minecraft/client/gui/hud/InGameHud;renderHotbarItem(Lnet/minecraft/client/gui/DrawContext;IIFLnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;I)V"
+            target = "Lnet/minecraft/client/gui/hud/InGameHud;renderHotbarItem(Lnet/minecraft/client/gui/DrawContext;IILnet/minecraft/client/render/RenderTickCounter;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;I)V"
         ),
         index = 1
     )
@@ -179,7 +180,7 @@ public abstract class MixinInGameHudFluent {
         at = @At(
             value = "INVOKE",
             ordinal = 2,
-            target = "Lnet/minecraft/client/gui/hud/InGameHud;renderHotbarItem(Lnet/minecraft/client/gui/DrawContext;IIFLnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;I)V"
+            target = "Lnet/minecraft/client/gui/hud/InGameHud;renderHotbarItem(Lnet/minecraft/client/gui/DrawContext;IILnet/minecraft/client/render/RenderTickCounter;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;I)V"
         ),
         index = 1
     )

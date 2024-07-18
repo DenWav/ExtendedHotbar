@@ -25,24 +25,23 @@ repositories {
     mavenCentral()
     maven("https://maven.terraformersmc.com/releases/")
     maven("https://maven.shedaniel.me/")
-    maven("https://maven.nucleoid.xyz/")
 }
 
 dependencies {
     minecraft("com.mojang:minecraft:$minecraftVersion")
     mappings("net.fabricmc:yarn:$yarnMappings:v2")
     modImplementation("net.fabricmc:fabric-loader:$loaderVersion")
-    modImplementation("net.fabricmc.fabric-api:fabric-api:0.97.1+1.20.4")
+    modImplementation("net.fabricmc.fabric-api:fabric-api:0.100.7+1.21")
 
-    modInclude("me.shedaniel.cloth:cloth-config-fabric:13.0.121")
-    modImplementation("com.terraformersmc:modmenu:9.2.0")
+    modInclude("me.shedaniel.cloth:cloth-config-fabric:15.0.127")
+    modImplementation("com.terraformersmc:modmenu:11.0.0")
 }
 
 java {
     withSourcesJar()
 
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
@@ -52,7 +51,7 @@ license {
 
 tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
-    options.release = 17
+    options.release = 21
 }
 
 tasks.processResources {

@@ -23,6 +23,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 import dev.denwav.extendedhotbar.Util;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
+import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.entity.JumpingMount;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -36,7 +37,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(InGameHud.class)
 public abstract class MixinInGameHudSwapping {
 
-    @Shadow protected abstract void renderHotbarItem(DrawContext context, int x, int y, float f, PlayerEntity player, ItemStack stack, int seed);
+    @Shadow protected abstract void renderHotbarItem(DrawContext context, int x, int y, RenderTickCounter tickCounter, PlayerEntity player, ItemStack stack, int seed);
 
     @WrapOperation(
         method = "renderHotbar",
@@ -67,7 +68,7 @@ public abstract class MixinInGameHudSwapping {
         at = @At(
             value = "INVOKE",
             ordinal = 0,
-            target = "Lnet/minecraft/client/gui/hud/InGameHud;renderHotbarItem(Lnet/minecraft/client/gui/DrawContext;IIFLnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;I)V"
+            target = "Lnet/minecraft/client/gui/hud/InGameHud;renderHotbarItem(Lnet/minecraft/client/gui/DrawContext;IILnet/minecraft/client/render/RenderTickCounter;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;I)V"
         )
     )
     private void drawTopHotbarItem(
@@ -75,22 +76,22 @@ public abstract class MixinInGameHudSwapping {
         final DrawContext context,
         final int x,
         final int y,
-        final float tickDelta,
+        final RenderTickCounter tickCounter,
         final PlayerEntity player,
         final ItemStack stack,
         final int seed,
         final Operation<Void> original,
         @Local(ordinal = 4) final int loopIndex
     ) {
-        original.call(instance, context, x, y, tickDelta, player, stack, seed);
+        original.call(instance, context, x, y, tickCounter, player, stack, seed);
 
         if (Util.isSwappingEnabled()) {
-            this.renderHotbarItem(context, x, y + Util.DISTANCE, tickDelta, player, player.getInventory().main.get(loopIndex + Util.SLOT_OFFSET), seed);
+            this.renderHotbarItem(context, x, y + Util.DISTANCE, tickCounter, player, player.getInventory().main.get(loopIndex + Util.SLOT_OFFSET), seed);
         }
     }
 
     @Inject(
-        method = "render",
+        method = "renderOverlayMessage",
         at = @At(
             value = "INVOKE",
             shift = At.Shift.AFTER,
@@ -98,7 +99,7 @@ public abstract class MixinInGameHudSwapping {
             target = "Lnet/minecraft/client/util/math/MatrixStack;translate(FFF)V"
         )
     )
-    private void moveActionBarTextUp(final DrawContext context, final float tickDelta, final CallbackInfo ci) {
+    private void moveActionBarTextUp(final DrawContext context, final RenderTickCounter tickCounter, final CallbackInfo ci) {
         // We don't need to push a matrix or reset, because the surrounding code we are injecting in
         // to does that for us.
         if (Util.isSwappingEnabled()) {
