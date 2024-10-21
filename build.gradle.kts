@@ -1,5 +1,5 @@
 plugins {
-    id("fabric-loom") version "1.7.2"
+    id("fabric-loom") version "1.8.10"
     id("org.cadixdev.licenser") version "0.6.1"
 }
 
@@ -31,10 +31,10 @@ dependencies {
     minecraft("com.mojang:minecraft:$minecraftVersion")
     mappings("net.fabricmc:yarn:$yarnMappings:v2")
     modImplementation("net.fabricmc:fabric-loader:$loaderVersion")
-    modImplementation("net.fabricmc.fabric-api:fabric-api:0.100.7+1.21")
+    modImplementation("net.fabricmc.fabric-api:fabric-api:0.106.0+1.21.1")
 
-    modInclude("me.shedaniel.cloth:cloth-config-fabric:15.0.127")
-    modImplementation("com.terraformersmc:modmenu:11.0.0")
+    modInclude("me.shedaniel.cloth:cloth-config-fabric:15.0.140")
+    modImplementation("com.terraformersmc:modmenu:11.0.3")
 }
 
 java {
