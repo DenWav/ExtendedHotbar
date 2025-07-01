@@ -31,6 +31,9 @@ public class ModConfig implements ConfigData {
     public boolean invert = false;
 
     @ConfigEntry.Gui.Tooltip
+    public boolean enableDoubleTap = false;
+
+    @ConfigEntry.Gui.Tooltip
     public boolean enableModifier = false;
 
     @ConfigEntry.Gui.Tooltip
