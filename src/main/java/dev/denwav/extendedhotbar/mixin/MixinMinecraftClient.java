@@ -1,6 +1,7 @@
 /*
  * This file is part of ExtendedHotbar, a FabricMC mod.
  * Copyright (C) 2023 Kyle Wood (DenWav)
+ * Copyright (C) 2025 Katherine Brand (unilock)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -40,81 +41,78 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(MinecraftClient.class)
 public abstract class MixinMinecraftClient {
 
-    @Shadow public Screen currentScreen;
-    @Shadow public HitResult crosshairTarget;
-    @Shadow public ClientWorld world;
-    @Shadow public ClientPlayerEntity player;
+	@Shadow public Screen currentScreen;
+	@Shadow public HitResult crosshairTarget;
+	@Shadow public ClientWorld world;
+	@Shadow public ClientPlayerEntity player;
 
-    @Inject(
-        method = "doItemPick",
-        at = @At("HEAD")
-    )
-    private void beforeDoItemPick(final CallbackInfo ci) {
-        if (!Util.isEnabled()) {
-            return;
-        }
+	@Inject(
+		method = "doItemPick",
+		at = @At("HEAD")
+	)
+	private void beforeDoItemPick(final CallbackInfo ci) {
+		if (!Util.isEnabled()) {
+			return;
+		}
 
-        if (this.currentScreen != null) {
-            return;
-        }
+		if (this.currentScreen != null) {
+			return;
+		}
 
-        final HitResult target = this.crosshairTarget;
-        if (target == null || target.getType() != HitResult.Type.BLOCK) {
-            return;
-        }
+		final HitResult target = this.crosshairTarget;
+		if (target == null || target.getType() != HitResult.Type.BLOCK) {
+			return;
+		}
 
-        final BlockPos pos = ((BlockHitResult) target).getBlockPos();
-        final BlockState blockState = this.world.getBlockState(pos);
-        final Block block = blockState.getBlock();
-        if (blockState.isAir()) {
-            return;
-        }
+		final BlockPos pos = ((BlockHitResult) target).getBlockPos();
+		final BlockState blockState = this.world.getBlockState(pos);
+		final Block block = blockState.getBlock();
+		if (blockState.isAir()) {
+			return;
+		}
 
-        // If the block is in the hotbar, we do nothing and let Minecraft do its thing
-        final PlayerInventory inventory = this.player.getInventory();
-        for (int i = 0; i < 9; i++) {
-            // While LEFT_HOTBAR_SLOT_INDEX is the base index for hotbar slots in the inventory gui, in InventoryPlayer,
-            // the hotbar starts at 0
-            final Item item = inventory.getStack(i).getItem();
-            final Block blockFromItem = Block.getBlockFromItem(item);
+		// If the block is in the hotbar, we do nothing and let Minecraft do its thing
+		final PlayerInventory inventory = this.player.getInventory();
+		for (int i = 0; i < 9; i++) {
+			// While LEFT_HOTBAR_SLOT_INDEX is the base index for hotbar slots in the inventory gui, in InventoryPlayer,
+			// the hotbar starts at 0
+			final Item item = inventory.getStack(i).getItem();
+			final Block blockFromItem = Block.getBlockFromItem(item);
 
-            if (block == blockFromItem) {
-                return;
-            }
-        }
+			if (block == blockFromItem) {
+				return;
+			}
+		}
 
-        // If the block is in the bottom row and not in the hotbar, we need to emulate Minecraft's default behavior
-        // We do this by swapping the rows and then letting Minecraft go from there
-        // It'll find the item in the hotbar and move the selection to that item accordingly
-        for (int i = 0; i < 9; i++) {
-            final Item item = inventory.getStack(i + Util.LEFT_BOTTOM_ROW_SLOT_INDEX).getItem();
-            final Block blockFromItem = Block.getBlockFromItem(item);
+		// If the block is in the bottom row and not in the hotbar, we need to emulate Minecraft's default behavior
+		// We do this by swapping the rows and then letting Minecraft go from there
+		// It'll find the item in the hotbar and move the selection to that item accordingly
+		for (int i = 0; i < 9; i++) {
+			final Item item = inventory.getStack(i + Util.LEFT_BOTTOM_ROW_SLOT_INDEX).getItem();
+			final Block blockFromItem = Block.getBlockFromItem(item);
 
-            if (block != blockFromItem) {
-                continue;
-            }
+			if (block != blockFromItem) {
+				continue;
+			}
 
-            if (Util.isFluent()) {
-                Util.switchFluentPosition();
-            }
-            Util.performSwap((MinecraftClient) (Object) this, true);
-            break;
-        }
-    }
+			Util.performSwap((MinecraftClient) (Object) this, true);
+			break;
+		}
+	}
 
-    @Inject(
-            method = "handleInputEvents",
-            at = @At(
-                    value = "FIELD",
-                    target = "Lnet/minecraft/entity/player/PlayerInventory;selectedSlot:I",
-                    opcode = Opcodes.PUTFIELD
-            )
-    )
-    private void handleInputEvents(CallbackInfo ci, @Local(ordinal = 0) int loopIndex) {
-        if (!Util.configHolder.getConfig().enableDoubleTap) return;
+	@Inject(
+			method = "handleInputEvents",
+			at = @At(
+					value = "FIELD",
+					target = "Lnet/minecraft/entity/player/PlayerInventory;selectedSlot:I",
+					opcode = Opcodes.PUTFIELD
+			)
+	)
+	private void handleInputEvents(CallbackInfo ci, @Local(ordinal = 0) int loopIndex) {
+		if (!Util.config.enableDoubleTap.value()) return;
 
-        if (this.player.getInventory().selectedSlot == loopIndex) {
-            Util.performSwap((MinecraftClient) (Object) this, false);
-        }
-    }
+		if (this.player.getInventory().selectedSlot == loopIndex) {
+			Util.performSwap((MinecraftClient) (Object) this, false);
+		}
+	}
 }

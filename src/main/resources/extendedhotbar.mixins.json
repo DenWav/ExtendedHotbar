@@ -1,17 +1,14 @@
 {
   "required": true,
-  "minVersion": "0.8.5",
   "package": "dev.denwav.extendedhotbar.mixin",
   "compatibilityLevel": "JAVA_21",
+  "minVersion": "0.8",
+  "mixins": [],
   "client": [
-    "MixinMinecraftClient",
-    "fluent.MixinInGameHudFluent",
-    "fluent.MixinMinecraftClientFluent",
-    "fluent.MixinPlayerInventoryFluent",
-    "swapping.MixinInGameHudSwapping"
+    "InGameHudAccessor",
+    "MixinMinecraftClient"
   ],
   "injectors": {
-    "defaultRequire": 1,
-    "maxShiftBy": 2
-  }
+    "defaultRequire": 1
+	}
 }

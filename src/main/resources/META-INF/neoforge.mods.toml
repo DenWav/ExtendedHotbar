@@ -1,0 +1,33 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+issueTrackerURL = "https://github.com/DenWav/ExtendedHotbar/issues"
+license = "LGPL-3.0-only"
+
+[[mods]]
+modId = "extendedhotbar"
+version = "${version}"
+displayName = "Extended Hotbar"
+displayURL = "https://github.com/DenWav/ExtendedHotbar"
+logoFile = "icon.png"
+authors = "denwav"
+credits = "unilock"
+description = '''
+Place the bottom bar of the player's inventory above the hotbar.
+'''
+
+[[mixins]]
+config = "extendedhotbar.mixins.json"
+
+[[dependencies.extendedhotbar]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21,1.21.1]"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.extendedhotbar]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.1,)"
+ordering = "NONE"
+side = "CLIENT"

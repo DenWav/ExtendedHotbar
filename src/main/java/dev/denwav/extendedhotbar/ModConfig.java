@@ -1,6 +1,7 @@
 /*
  * This file is part of ExtendedHotbar, a FabricMC mod.
  * Copyright (C) 2023 Kyle Wood (DenWav)
+ * Copyright (C) 2025 Katherine Brand (unilock)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -17,25 +18,21 @@
 
 package dev.denwav.extendedhotbar;
 
-import me.shedaniel.autoconfig.ConfigData;
-import me.shedaniel.autoconfig.annotation.Config;
-import me.shedaniel.autoconfig.annotation.ConfigEntry;
+import folk.sisby.kaleido.api.ReflectiveConfig;
+import folk.sisby.kaleido.lib.quiltconfig.api.annotations.Comment;
+import folk.sisby.kaleido.lib.quiltconfig.api.values.TrackedValue;
 
-@Config(name = "extendedhotbar")
-public class ModConfig implements ConfigData {
+public class ModConfig extends ReflectiveConfig {
 
-    @ConfigEntry.Gui.Tooltip
-    public boolean enabled = true;
+	@Comment("Toggle Extended Hotbar on and off")
+	public final TrackedValue<Boolean> enabled = value(true);
 
-    @ConfigEntry.Gui.Tooltip
-    public boolean invert = false;
+	@Comment("Invert full row / single item swap")
+	public final TrackedValue<Boolean> invert = value(false);
 
-    @ConfigEntry.Gui.Tooltip
-    public boolean enableDoubleTap = false;
+	@Comment("Enable double-tapping a hotbar slot key to swap only that hotbar slot")
+	public final TrackedValue<Boolean> enableDoubleTap = value(false);
 
-    @ConfigEntry.Gui.Tooltip
-    public boolean enableModifier = false;
-
-    @ConfigEntry.Gui.Tooltip
-    public boolean fluent = false;
+	@Comment("Enable holding SHIFT to change item swap behavior")
+	public final TrackedValue<Boolean> enableModifier = value(false);
 }

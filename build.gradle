@@ -1,0 +1,73 @@
+plugins {
+	id 'dev.architectury.loom' version '1.10.+'
+	id 'org.cadixdev.licenser' version '0.6.1'
+}
+
+version = "${project.mod_version}+${project.minecraft_version_base}+neoforge"
+group = project.maven_group
+
+base {
+	archivesName = project.archives_base_name
+}
+
+loom {
+	mods {
+		'extendedhotbar' {
+			sourceSet sourceSets.main
+		}
+	}
+}
+
+repositories {
+	maven {
+		name = 'NeoForged'
+		url = 'https://maven.neoforged.net/releases/'
+	}
+	maven {
+		name = 'Sleeping Town'
+		url = 'https://repo.sleeping.town/'
+	}
+}
+
+dependencies {
+	minecraft "net.minecraft:minecraft:${project.minecraft_version}"
+	mappings loom.layered {
+		it.mappings("net.fabricmc:yarn:${project.yarn_mappings}:v2")
+		it.mappings("dev.architectury:yarn-mappings-patch-neoforge:${project.yarn_mappings_patch}")
+	}
+	neoForge "net.neoforged:neoforge:${project.neoforge_version}"
+
+	implementation include("folk.sisby:kaleido-config:${project.kaleido_version}")
+}
+
+processResources {
+	inputs.property 'version', project.version
+
+	filesMatching('META-INF/neoforge.mods.toml') {
+		expand version: project.version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.encoding = 'UTF-8'
+	it.options.release = 21
+}
+
+java {
+	withSourcesJar()
+
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}
+
+jar {
+	['COPYING', 'COPYING.LESSER'].each { license ->
+		from(license) {
+			rename { "${it}_${project.base.archivesName.get()}" }
+		}
+	}
+}
+
+license {
+	header = project.file("header.txt")
+}

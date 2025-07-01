@@ -1,6 +1,7 @@
 /*
  * This file is part of ExtendedHotbar, a FabricMC mod.
  * Copyright (C) 2023 Kyle Wood (DenWav)
+ * Copyright (C) 2025 Katherine Brand (unilock)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -17,119 +18,113 @@
 
 package dev.denwav.extendedhotbar.client;
 
-import dev.denwav.extendedhotbar.ExtendedHotbarState;
-import dev.denwav.extendedhotbar.ModConfig;
+import com.mojang.blaze3d.systems.RenderSystem;
 import dev.denwav.extendedhotbar.Util;
-import me.shedaniel.autoconfig.AutoConfig;
-import me.shedaniel.autoconfig.serializer.Toml4jConfigSerializer;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
+import dev.denwav.extendedhotbar.mixin.InGameHudAccessor;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ingame.AbstractInventoryScreen;
-import net.minecraft.client.gui.screen.ingame.CreativeInventoryScreen;
-import net.minecraft.client.gui.screen.ingame.HorseScreen;
-import net.minecraft.client.network.ClientPlayerInteractionManager;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.util.Identifier;
+import net.minecraft.world.GameMode;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.client.event.*;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
+import net.neoforged.neoforge.common.NeoForge;
 
 import static org.lwjgl.glfw.GLFW.*;
 
-@Environment(EnvType.CLIENT)
-public class ExtendedHotbarClient implements ClientModInitializer {
+@Mod(value = ExtendedHotbarClient.MOD_ID, dist = Dist.CLIENT)
+public final class ExtendedHotbarClient {
 
-    private static final KeyBinding swapKeyBinding = new KeyBinding(
-        "key.extendedhotbar.switch",
-        InputUtil.Type.KEYSYM,
-        GLFW_KEY_R,
-        "key.extendedhotbar"
-    );
+	public static final String MOD_ID = "extendedhotbar";
 
-    private static final KeyBinding toggleKeyBinding = new KeyBinding(
-        "key.extendedhotbar.toggle",
-        InputUtil.Type.KEYSYM,
-        GLFW_KEY_EQUAL,
-        "key.extendedhotbar"
-    );
+	private static final KeyBinding swapKeyBinding = new KeyBinding(
+		"key.extendedhotbar.switch",
+		InputUtil.Type.KEYSYM,
+		GLFW_KEY_R,
+		"key.extendedhotbar"
+	);
 
-    @Override
-    public void onInitializeClient() {
-        KeyBindingHelper.registerKeyBinding(swapKeyBinding);
-        KeyBindingHelper.registerKeyBinding(toggleKeyBinding);
+	private static final KeyBinding toggleKeyBinding = new KeyBinding(
+		"key.extendedhotbar.toggle",
+		InputUtil.Type.KEYSYM,
+		GLFW_KEY_EQUAL,
+		"key.extendedhotbar"
+	);
 
-        Util.configHolder = AutoConfig.register(ModConfig.class, Toml4jConfigSerializer::new);
-        // Use "config" to hold state because it's simple
-        Util.stateHolder = AutoConfig.register(ExtendedHotbarState.class, Toml4jConfigSerializer::new);
+	public ExtendedHotbarClient(IEventBus bus) {
+		bus.addListener(RegisterKeyMappingsEvent.class, event -> {
+			event.register(swapKeyBinding);
+			event.register(toggleKeyBinding);
+		});
 
-        ClientTickEvents.END_CLIENT_TICK.register(this::onTick);
-        ScreenEvents.BEFORE_INIT.register(this::onScreenOpen);
-    }
+		NeoForge.EVENT_BUS.addListener(ClientTickEvent.Post.class, event -> {
+			if (toggleKeyBinding.wasPressed()) {
+				Util.config.enabled.setValue(!Util.config.enabled.value());
+				Util.config.save();
+				return;
+			}
 
-    private void onTick(final MinecraftClient client) {
-        final ModConfig config = Util.configHolder.getConfig();
-        if (toggleKeyBinding.wasPressed()) {
-            config.enabled = !config.enabled;
-            Util.configHolder.save();
-            return;
-        }
+			if (!Util.config.enabled.value()) {
+				return;
+			}
 
-        if (!config.enabled || config.fluent) {
-            return;
-        }
+			final MinecraftClient client = MinecraftClient.getInstance();
 
-        if (client.world == null || client.currentScreen != null || !MinecraftClient.isHudEnabled()) {
-            return;
-        }
+			if (client.world == null || client.currentScreen != null || !MinecraftClient.isHudEnabled()) {
+				return;
+			}
 
-        if (!swapKeyBinding.wasPressed()) {
-            return;
-        }
+			if (!swapKeyBinding.wasPressed()) {
+				return;
+			}
 
-        boolean singleSwap;
-        if (config.enableModifier) {
-            final long window = client.getWindow().getHandle();
-            singleSwap = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS && glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) != GLFW_PRESS;
+			boolean singleSwap;
+			if (Util.config.enableModifier.value()) {
+				final long window = client.getWindow().getHandle();
+				singleSwap = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS && glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) != GLFW_PRESS;
 
-            if (config.invert) {
-                singleSwap = !singleSwap;
-            }
-        } else {
-            singleSwap = !config.invert;
-        }
+				if (Util.config.invert.value()) {
+					singleSwap = !singleSwap;
+				}
+			} else {
+				singleSwap = !Util.config.invert.value();
+			}
 
-        Util.performSwap(client, singleSwap);
-    }
+			Util.performSwap(client, singleSwap);
+		});
 
-    private void onScreenOpen(
-        final MinecraftClient client,
-        final Screen screen,
-        final int scaledWidth,
-        final int scaledHeight
-    ) {
-        if (!(screen instanceof AbstractInventoryScreen<?>) && !(screen instanceof HorseScreen)) {
-            return;
-        }
-        final ClientPlayerInteractionManager manager = client.interactionManager;
-        if (manager != null && manager.hasCreativeInventory()) {
-            if (!(screen instanceof CreativeInventoryScreen)) {
-                // Creative inventories are opened after the normal inventory is opened, so we want to ignore when
-                // the first one closes (the non-creative inventory).
-                // It goes setScreen(InventoryScreen) -> InventoryScreen.init() -> setScreen(CreativeInventoryScreen)
-                return;
-            }
-        }
-        ScreenEvents.remove(screen).register(this::onScreenClose);
-    }
+		bus.addListener(RegisterGuiLayersEvent.class, event -> {
+			event.registerAbove(VanillaGuiLayers.HOTBAR, Identifier.of(MOD_ID, "hotbar"), (context, tickCounter) -> {
+				if (Util.isEnabled() && MinecraftClient.getInstance().interactionManager.getCurrentGameMode() != GameMode.SPECTATOR) {
+					context.getMatrices().translate(0, Util.DISTANCE, 0);
 
-    private void onScreenClose(final Screen screen) {
-        if (Util.isRenderSwapped()) {
-            // swap back
-            Util.resetRenderedPosition();
-            Util.performSwap(MinecraftClient.getInstance(), true);
-        }
-    }
+					RenderSystem.enableBlend();
+					context.getMatrices().push();
+
+					context.drawGuiTexture(InGameHudAccessor.getHOTBAR_TEXTURE(), context.getScaledWindowWidth() / 2 - 91, context.getScaledWindowHeight() - 22, 182, 22);
+
+					final ClientPlayerEntity player = MinecraftClient.getInstance().player;
+					int seed = 1;
+
+					for (int slot = 0; slot < 9; slot++) {
+						int x = context.getScaledWindowWidth() / 2 - 90 + slot * 20 + 2;
+						int y = context.getScaledWindowHeight() - 16 - 3;
+						((InGameHudAccessor) MinecraftClient.getInstance().inGameHud).callRenderHotbarItem(context, x, y, tickCounter, player, player.getInventory().main.get(slot + Util.SLOT_OFFSET), seed++);
+					}
+
+					context.getMatrices().pop();
+					RenderSystem.disableBlend();
+				}
+			});
+			event.registerBelow(VanillaGuiLayers.EFFECTS, Identifier.of(MOD_ID, "hotbar_post"), (context, tickCounter) -> {
+				if (Util.isEnabled() && MinecraftClient.getInstance().interactionManager.getCurrentGameMode() != GameMode.SPECTATOR) {
+					context.getMatrices().translate(0, -Util.DISTANCE, 0);
+				}
+			});
+		});
+	}
 }
