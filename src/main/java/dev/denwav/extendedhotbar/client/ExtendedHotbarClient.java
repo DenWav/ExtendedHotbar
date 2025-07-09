@@ -99,7 +99,9 @@ public final class ExtendedHotbarClient {
 
 		bus.addListener(RegisterGuiLayersEvent.class, event -> {
 			event.registerAbove(VanillaGuiLayers.HOTBAR, Identifier.of(MOD_ID, "hotbar"), (context, tickCounter) -> {
-				if (Util.isEnabled() && MinecraftClient.getInstance().interactionManager.getCurrentGameMode() != GameMode.SPECTATOR) {
+				if (MinecraftClient.getInstance().options.hudHidden || MinecraftClient.getInstance().interactionManager.getCurrentGameMode() == GameMode.SPECTATOR) return;
+
+				if (Util.isEnabled()) {
 					context.getMatrices().translate(0, Util.DISTANCE, 0);
 
 					RenderSystem.enableBlend();
@@ -121,7 +123,9 @@ public final class ExtendedHotbarClient {
 				}
 			});
 			event.registerBelow(VanillaGuiLayers.EFFECTS, Identifier.of(MOD_ID, "hotbar_post"), (context, tickCounter) -> {
-				if (Util.isEnabled() && MinecraftClient.getInstance().interactionManager.getCurrentGameMode() != GameMode.SPECTATOR) {
+				if (MinecraftClient.getInstance().options.hudHidden || MinecraftClient.getInstance().interactionManager.getCurrentGameMode() == GameMode.SPECTATOR) return;
+
+				if (Util.isEnabled()) {
 					context.getMatrices().translate(0, -Util.DISTANCE, 0);
 				}
 			});
