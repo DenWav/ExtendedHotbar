@@ -22,6 +22,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import dev.denwav.extendedhotbar.Util;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.LayeredDrawer;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.entity.player.PlayerEntity;
@@ -98,7 +99,7 @@ public abstract class MixinInGameHudSwapping {
             target = "Lnet/minecraft/client/util/math/MatrixStack;translate(FFF)V"
         )
     )
-    private void moveActionBarTextUp(final DrawContext context, final RenderTickCounter tickCounter, final CallbackInfo ci) {
+    private void moveActionBarTextUp(final CallbackInfo ci, @Local(argsOnly = true) final DrawContext context) {
         // We don't need to push a matrix or reset, because the surrounding code we are injecting in
         // to does that for us.
         if (Util.isSwappingEnabled()) {
@@ -106,28 +107,19 @@ public abstract class MixinInGameHudSwapping {
         }
     }
 
-    @Inject(
-        id = "move",
-        method = {
-            "renderMountJumpBar",
-            "renderExperienceBar",
-            "renderStatusBars",
-            "renderMountHealth",
-            "renderHeldItemTooltip",
-            "renderExperienceLevel"
-        },
-        at = {
-            @At(value = "HEAD", id = "head"),
-            @At(value = "RETURN", id = "return")
-        }
-    )
-    private void moveHud(final CallbackInfo ci, @Local(argsOnly = true) DrawContext context) {
+    @Inject(method = "renderMainHud", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;getScaledWindowWidth()I", ordinal = 0))
+    private void moveHudUp(final CallbackInfo ci, @Local(argsOnly = true) final DrawContext context) {
         if (Util.isSwappingEnabled()) {
-            if ("move:head".equals(ci.getId())) {
-                Util.moveUp(context.getMatrices());
-            } else {
+            Util.moveUp(context.getMatrices());
+        }
+    }
+
+    @WrapOperation(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/LayeredDrawer;addLayer(Lnet/minecraft/client/gui/LayeredDrawer$Layer;)Lnet/minecraft/client/gui/LayeredDrawer;", ordinal = 3))
+    private LayeredDrawer moveHudDown(final LayeredDrawer instance, final LayeredDrawer.Layer layer, final Operation<LayeredDrawer> original) {
+        return original.call(original.call(instance, layer), (LayeredDrawer.Layer) (context, tickCounter) -> {
+            if (Util.isSwappingEnabled()) {
                 Util.reset(context.getMatrices());
             }
-        }
+		});
     }
 }
