@@ -1,5 +1,5 @@
 plugins {
-    id("fabric-loom") version "1.8.10"
+    id("fabric-loom") version "1.11.4"
     id("org.cadixdev.licenser") version "0.6.1"
 }
 

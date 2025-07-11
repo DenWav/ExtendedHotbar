@@ -24,7 +24,6 @@ import dev.denwav.extendedhotbar.Util;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.render.RenderTickCounter;
-import net.minecraft.entity.JumpingMount;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
@@ -110,52 +109,19 @@ public abstract class MixinInGameHudSwapping {
     @Inject(
         id = "move",
         method = {
-            "renderMountHealth",
+            "renderMountJumpBar",
+            "renderExperienceBar",
             "renderStatusBars",
+            "renderMountHealth",
             "renderHeldItemTooltip",
+            "renderExperienceLevel"
         },
         at = {
             @At(value = "HEAD", id = "head"),
             @At(value = "RETURN", id = "return")
         }
     )
-    private void moveHud(final DrawContext context, final CallbackInfo ci) {
-        if (Util.isSwappingEnabled()) {
-            if ("move:head".equals(ci.getId())) {
-                Util.moveUp(context.getMatrices());
-            } else {
-                Util.reset(context.getMatrices());
-            }
-        }
-    }
-
-    @Inject(
-        id = "move",
-        method = "renderExperienceBar",
-        at = {
-            @At(value = "HEAD", id = "head"),
-            @At(value = "RETURN", id = "return")
-        }
-    )
-    private void moveExpBar(final DrawContext context, final int x, final CallbackInfo ci) {
-        if (Util.isSwappingEnabled()) {
-            if ("move:head".equals(ci.getId())) {
-                Util.moveUp(context.getMatrices());
-            } else {
-                Util.reset(context.getMatrices());
-            }
-        }
-    }
-
-    @Inject(
-        id = "move",
-        method = "renderMountJumpBar",
-        at = {
-            @At(value = "HEAD", id = "head"),
-            @At(value = "RETURN", id = "return")
-        }
-    )
-    private void moveMountJumpBarUp(final JumpingMount mount, final DrawContext context, final int x, final CallbackInfo ci) {
+    private void moveHud(final CallbackInfo ci, @Local(argsOnly = true) DrawContext context) {
         if (Util.isSwappingEnabled()) {
             if ("move:head".equals(ci.getId())) {
                 Util.moveUp(context.getMatrices());
