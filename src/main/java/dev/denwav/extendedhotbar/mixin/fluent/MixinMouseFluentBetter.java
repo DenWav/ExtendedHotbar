@@ -17,52 +17,51 @@
 
 package dev.denwav.extendedhotbar.mixin.fluent;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import dev.denwav.extendedhotbar.Util;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Mouse;
 import net.minecraft.entity.player.PlayerInventory;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(PlayerInventory.class)
-public abstract class MixinPlayerInventoryFluent {
+@Mixin(Mouse.class)
+public class MixinMouseFluentBetter {
 
-    @Shadow
-    public int selectedSlot;
+    @Shadow @Final private MinecraftClient client;
 
-    @Inject(
-            method = "setSelectedSlot",
-            at = @At("HEAD")
+    @WrapOperation(
+        method = "onMouseScroll",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/entity/player/PlayerInventory;setSelectedSlot(I)V"
+        )
     )
-    private void onSetSelectedSlot(int slot, CallbackInfo ci) {
+    private void wrapSetSelectedSlot(PlayerInventory inventory, int newSlot, Operation<Void> original) {
         if (!Util.isFluent()) {
+            original.call(inventory, newSlot);
             return;
         }
 
-        // Check if the new slot is out of bounds (this happens during scrolling)
-        if (slot < 0 || slot >= 9) {
+        int currentSlot = inventory.selectedSlot;
+
+        // Check if we're trying to scroll past the bounds
+        if (newSlot < 0 || newSlot >= 9) {
             // Switch position and swap hotbars
             Util.switchFluentPosition();
-            Util.performSwap(MinecraftClient.getInstance(), true);
-        }
-    }
+            Util.performSwap(this.client, true);
 
-    @Inject(
-            method = "setSelectedSlot",
-            at = @At("TAIL")
-    )
-    private void afterSetSelectedSlot(int slot, CallbackInfo ci) {
-        if (!Util.isFluent()) {
-            return;
+            // Normalize the slot to stay within bounds
+            if (newSlot < 0) {
+                newSlot = 8;
+            } else if (newSlot >= 9) {
+                newSlot = 0;
+            }
         }
 
-        // Normalize the selected slot back to 0-8 range if it went out of bounds
-        if (this.selectedSlot < 0) {
-            this.selectedSlot = 8;
-        } else if (this.selectedSlot >= 9) {
-            this.selectedSlot = 0;
-        }
+        original.call(inventory, newSlot);
     }
 }

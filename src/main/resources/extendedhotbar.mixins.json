@@ -8,6 +8,8 @@
     "fluent.MixinInGameHudFluent",
     "fluent.MixinMinecraftClientFluent",
     "fluent.MixinPlayerInventoryFluent",
+    "fluent.MixinMouseFluent",
+    "fluent.MixinMouseFluentBetter",
     "swapping.MixinInGameHudSwapping"
   ],
   "injectors": {

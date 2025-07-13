@@ -29,11 +29,14 @@ public final class Util {
 
     public static final int LEFT_BOTTOM_ROW_SLOT_INDEX = 27;
 
+    private static boolean fluentInventorySwapped = false;
+
     private static final int LEFT_HOTBAR_SLOT_INDEX = 36;
     private static final int BOTTOM_RIGHT_CRAFTING_SLOT_INDEX = 4;
 
     public static final int DISTANCE = -22;
 
+    // Fixed: Use the correct slot offset for the second row of inventory (slots 27-35)
     public static final int SLOT_OFFSET = LEFT_BOTTOM_ROW_SLOT_INDEX;
 
     public static ConfigHolder<ModConfig> configHolder = null;
@@ -46,14 +49,6 @@ public final class Util {
 
     public static boolean isEnabled() {
         return configHolder != null && configHolder.getConfig().enabled;
-    }
-
-    public static boolean isSwappingEnabled() {
-        if (configHolder == null) {
-            return false;
-        }
-        final ModConfig config = configHolder.getConfig();
-        return config.enabled && !config.fluent;
     }
 
     public static boolean isFluent() {
@@ -86,6 +81,16 @@ public final class Util {
         }
     }
 
+    public static boolean isSwappingEnabled() {
+        if (configHolder == null) {
+            return false;
+        }
+        final ModConfig config = configHolder.getConfig();
+        return config.enabled && !config.fluent;
+    }
+
+
+
     public static void swapRenderedPosition() {
         swapRender = true;
     }
@@ -107,6 +112,17 @@ public final class Util {
             case RIGHT -> ExtendedHotbarState.Position.LEFT;
         };
         stateHolder.save();
+
+        // Reset the fluent inventory state when switching positions
+        fluentInventorySwapped = false;
+    }
+
+    public static boolean isFluentInventorySwapped() {
+        return fluentInventorySwapped;
+    }
+
+    public static void setFluentInventorySwapped(boolean swapped) {
+        fluentInventorySwapped = swapped;
     }
 
     public static void moveUp(final MatrixStack matrixStack) {
@@ -151,10 +167,10 @@ public final class Util {
     }
 
     private static void swapItem(
-        final ClientPlayerInteractionManager interactionManager,
-        final ClientPlayerEntity player,
-        final int syncId,
-        final int slotId
+            final ClientPlayerInteractionManager interactionManager,
+            final ClientPlayerEntity player,
+            final int syncId,
+            final int slotId
     ) {
         /*
          * Implementation note:

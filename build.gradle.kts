@@ -31,10 +31,10 @@ dependencies {
     minecraft("com.mojang:minecraft:$minecraftVersion")
     mappings("net.fabricmc:yarn:$yarnMappings:v2")
     modImplementation("net.fabricmc:fabric-loader:$loaderVersion")
-    modImplementation("net.fabricmc.fabric-api:fabric-api:0.106.0+1.21.1")
+    modImplementation("net.fabricmc.fabric-api:fabric-api:0.119.3+1.21.4")
 
-    modInclude("me.shedaniel.cloth:cloth-config-fabric:15.0.140")
-    modImplementation("com.terraformersmc:modmenu:11.0.3")
+    modInclude("me.shedaniel.cloth:cloth-config-fabric:17.0.144")
+    modImplementation("com.terraformersmc:modmenu:13.0.3")
 }
 
 java {

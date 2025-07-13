@@ -17,8 +17,6 @@
 
 package dev.denwav.extendedhotbar.mixin.fluent;
 
-import dev.denwav.extendedhotbar.ExtendedHotbarState;
-import dev.denwav.extendedhotbar.Util;
 import net.minecraft.client.MinecraftClient;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
@@ -31,34 +29,26 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinMinecraftClientFluent {
 
     @Inject(
-        method = "handleInputEvents",
-        at = @At(
-            value = "JUMP",
-            shift = At.Shift.AFTER
-        ),
-        slice = @Slice(
-            from = @At(
-                value = "FIELD",
-                target = "Lnet/minecraft/client/option/GameOptions;inventoryKey:Lnet/minecraft/client/option/KeyBinding;",
-                opcode = Opcodes.GETFIELD
+            method = "handleInputEvents",
+            at = @At(
+                    value = "JUMP",
+                    shift = At.Shift.AFTER
             ),
-            to = @At(
-                value = "FIELD",
-                target = "Lnet/minecraft/client/MinecraftClient;interactionManager:Lnet/minecraft/client/network/ClientPlayerInteractionManager;",
-                ordinal = 0,
-                opcode = Opcodes.GETFIELD
+            slice = @Slice(
+                    from = @At(
+                            value = "FIELD",
+                            target = "Lnet/minecraft/client/option/GameOptions;inventoryKey:Lnet/minecraft/client/option/KeyBinding;",
+                            opcode = Opcodes.GETFIELD
+                    ),
+                    to = @At(
+                            value = "FIELD",
+                            target = "Lnet/minecraft/client/MinecraftClient;interactionManager:Lnet/minecraft/client/network/ClientPlayerInteractionManager;",
+                            ordinal = 0,
+                            opcode = Opcodes.GETFIELD
+                    )
             )
-        )
     )
     private void onInventoryOpened(final CallbackInfo ci) {
-        // Using this instead of ScreenEvents.BEFORE_INIT because we need to do the swap before the inventory is
-        // actually opened (before setScreen is called), specifically for horse inventories
-        // If we wait until setScree, or when that even is fired, then it's already too late and we can't do the swap.
-        if (!Util.isFluent() || Util.getFluentPosition() == ExtendedHotbarState.Position.LEFT) {
-            return;
-        }
 
-        Util.swapRenderedPosition();
-        Util.performSwap(MinecraftClient.getInstance(), true);
     }
 }

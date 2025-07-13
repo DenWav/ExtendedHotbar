@@ -46,8 +46,8 @@ public abstract class MixinMinecraftClient {
     @Shadow public ClientPlayerEntity player;
 
     @Inject(
-        method = "doItemPick",
-        at = @At("HEAD")
+            method = "doItemPick",
+            at = @At("HEAD")
     )
     private void beforeDoItemPick(final CallbackInfo ci) {
         if (!Util.isEnabled()) {
