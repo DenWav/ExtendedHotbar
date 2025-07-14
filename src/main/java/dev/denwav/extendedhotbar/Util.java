@@ -23,12 +23,16 @@ import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.SlotActionType;
 
 public final class Util {
 
     public static final int LEFT_BOTTOM_ROW_SLOT_INDEX = 27;
-
+    private static int currentHotbarIndex = 0;
+    private static int previousHotbarIndex = 0;
+    private static boolean hotbarJustChanged = false;
     private static boolean fluentInventorySwapped = false;
 
     private static final int LEFT_HOTBAR_SLOT_INDEX = 36;
@@ -89,7 +93,125 @@ public final class Util {
         return config.enabled && !config.fluent;
     }
 
+    public static int getCurrentHotbarIndex() {
+        return currentHotbarIndex;
+    }
 
+    public static int getPreviousHotbarIndex() {
+        return previousHotbarIndex;
+    }
+
+    public static boolean hasHotbarJustChanged() {
+        return hotbarJustChanged;
+    }
+
+    public static void markHotbarChangeProcessed() {
+        hotbarJustChanged = false;
+    }
+
+    public static void setCurrentHotbarIndex(int index) {
+        int maxHotbars = Math.min(4, Math.max(2, configHolder.getConfig().numberOfHotbars));
+        if (index != currentHotbarIndex) {
+            previousHotbarIndex = currentHotbarIndex;
+            currentHotbarIndex = Math.max(0, Math.min(index, maxHotbars - 1));
+            hotbarJustChanged = true;
+        }
+    }
+
+    public static void switchToNextHotbar() {
+        int maxHotbars = Math.min(4, Math.max(2, configHolder.getConfig().numberOfHotbars));
+        previousHotbarIndex = currentHotbarIndex;
+        currentHotbarIndex = (currentHotbarIndex + 1) % maxHotbars;
+        hotbarJustChanged = true;
+    }
+
+    public static void switchToPreviousHotbar() {
+        int maxHotbars = Math.min(4, Math.max(2, configHolder.getConfig().numberOfHotbars));
+        previousHotbarIndex = currentHotbarIndex;
+        currentHotbarIndex = (currentHotbarIndex - 1 + maxHotbars) % maxHotbars;
+        hotbarJustChanged = true;
+    }
+
+    // Add method to get the actual inventory slot for a given hotbar and slot
+    public static int getInventorySlotForHotbar(int hotbarIndex, int slotIndex) {
+        if (slotIndex < 0 || slotIndex >= 9) {
+            return -1;
+        }
+
+        switch (hotbarIndex) {
+            case 0: // Normal hotbar (slots 0-8)
+                return slotIndex;
+            case 1: // 2nd row of inventory (slots 27-35)
+                return slotIndex + 27;
+            case 2: // 3rd row of inventory (slots 18-26)
+                return slotIndex + 18;
+            case 3: // 4th row of inventory (slots 9-17)
+                return slotIndex + 9;
+            default:
+                return -1;
+        }
+    }
+
+    // Add method to detect which hotbar a slot belongs to
+    public static int getHotbarIndexForSlot(int inventorySlot) {
+        if (inventorySlot >= 0 && inventorySlot <= 8) {
+            return 0; // Normal hotbar
+        } else if (inventorySlot >= 9 && inventorySlot <= 17) {
+            return 1; // 2nd row
+        } else if (inventorySlot >= 18 && inventorySlot <= 26) {
+            return 2; // 3rd row
+        } else if (inventorySlot >= 27 && inventorySlot <= 35) {
+            return 3; // 4th row
+        }
+        return -1; // Not a hotbar slot
+    }
+
+    public static void performMultiHotbarSwap(MinecraftClient client, boolean isScrolling) {
+        if (client.player == null) return;
+
+        PlayerInventory inventory = client.player.getInventory();
+
+        // Only swap if we actually changed hotbars
+        if (currentHotbarIndex == previousHotbarIndex) {
+            return;
+        }
+
+        // Get the inventory slot ranges for both hotbars
+        int prevRowStart = getInventorySlotForHotbar(previousHotbarIndex, 0);
+        int currentRowStart = getInventorySlotForHotbar(currentHotbarIndex, 0);
+
+        // If previous hotbar was not the main hotbar (0), swap it back
+        if (previousHotbarIndex != 0 && prevRowStart != -1) {
+            for (int i = 0; i < 9; i++) {
+                int hotbarSlot = i;
+                int prevSlot = prevRowStart + i;
+
+                if (prevSlot < inventory.main.size()) {
+                    ItemStack hotbarItem = inventory.main.get(hotbarSlot);
+                    ItemStack prevRowItem = inventory.main.get(prevSlot);
+
+                    inventory.main.set(hotbarSlot, prevRowItem);
+                    inventory.main.set(prevSlot, hotbarItem);
+                }
+            }
+        }
+
+        // If current hotbar is not the main hotbar (0), swap it in
+        if (currentHotbarIndex != 0 && currentRowStart != -1) {
+            for (int i = 0; i < 9; i++) {
+                int hotbarSlot = i;
+                int currentSlot = currentRowStart + i;
+
+                if (currentSlot < inventory.main.size()) {
+                    ItemStack hotbarItem = inventory.main.get(hotbarSlot);
+                    ItemStack currentRowItem = inventory.main.get(currentSlot);
+
+                    inventory.main.set(hotbarSlot, currentRowItem);
+                    inventory.main.set(currentSlot, hotbarItem);
+                }
+            }
+        }
+    }
 
     public static void swapRenderedPosition() {
         swapRender = true;
@@ -135,6 +257,12 @@ public final class Util {
     }
 
     public static void performSwap(final MinecraftClient client, final boolean fullRow) {
+        // If we're in multi-hotbar mode, handle it differently
+        if (isFluent() && configHolder.getConfig().numberOfHotbars > 2) {
+            performMultiHotbarSwap(client, fullRow);
+            return;
+        }
+
         final ClientPlayerEntity player = client.player;
         if (player == null) {
             return;

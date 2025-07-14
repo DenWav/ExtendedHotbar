@@ -51,17 +51,18 @@ public class MixinMouseFluent {
         // Get the current selected slot before it changes
         int currentSlot = this.client.player.getInventory().selectedSlot;
 
-        // Calculate scroll direction from the vertical parameter
-        // The actual scroll amount calculation is done in the original method
-        // We just need to detect if we're about to go out of bounds
-
         // Check if we would scroll past the hotbar bounds
-        // This is a bit tricky since we need to predict what the new slot would be
-        // Let's use a simple approach: if we're at the edges and scrolling further
         if ((currentSlot == 0 && vertical > 0) || (currentSlot == 8 && vertical < 0)) {
-            // Switch position and swap hotbars
-            Util.switchFluentPosition();
-            Util.performSwap(this.client, true);
+            // Switch to next/previous hotbar based on scroll direction
+            if (vertical > 0) {
+                Util.switchToPreviousHotbar();
+            } else {
+                Util.switchToNextHotbar();
+            }
+
+            // Only perform swap when actually switching hotbars, not just changing the index
+            Util.performMultiHotbarSwap(this.client, true);
         }
     }
+
 }

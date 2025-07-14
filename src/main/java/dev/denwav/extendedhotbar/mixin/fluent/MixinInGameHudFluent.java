@@ -41,8 +41,11 @@ public abstract class MixinInGameHudFluent {
 
     @Shadow protected abstract void renderHotbarItem(DrawContext context, int x, int y, RenderTickCounter tickCounter, PlayerEntity player, ItemStack stack, int seed);
 
-    @Unique private int hotbarOffset;
+    @Unique private int hotbarWidth;
+    @Unique private int totalHotbars;
     @Unique private int hotbarCenterX;
+    @Unique private int[] hotbarPositions;
+    @Unique private int currentSlotIndex;
 
     @WrapOperation(
             method = "renderHotbar",
@@ -63,20 +66,25 @@ public abstract class MixinInGameHudFluent {
             final Operation<Void> original
     ) {
         if (!Util.isFluent()) {
-            this.hotbarOffset = 0;
+            this.hotbarWidth = 0;
+            this.totalHotbars = 1;
             original.call(context, renderLayerGetter, texture, x, y, width, height);
             return;
         }
 
-        // Set offset to the full width of the hotbar (182 pixels)
-        this.hotbarOffset = width;
-        this.hotbarCenterX = x + width / 2; // Store the center position
+        this.totalHotbars = Math.min(4, Math.max(2, Util.configHolder.getConfig().numberOfHotbars));
+        this.hotbarWidth = width; // 182 pixels
+        this.hotbarCenterX = x + width / 2;
 
-        // Always draw normal hotbar on the left
-        context.drawGuiTexture(renderLayerGetter, texture, x - this.hotbarOffset / 2, y, width, height);
+        // Calculate positions for all hotbars - spread them horizontally
+        this.hotbarPositions = new int[this.totalHotbars];
+        int totalWidth = this.hotbarWidth * this.totalHotbars;
+        int startX = x - (totalWidth - this.hotbarWidth) / 2;
 
-        // Always draw extended hotbar on the right
-        context.drawGuiTexture(renderLayerGetter, texture, x + this.hotbarOffset / 2, y, width, height);
+        for (int i = 0; i < this.totalHotbars; i++) {
+            this.hotbarPositions[i] = startX + (i * this.hotbarWidth);
+            context.drawGuiTexture(renderLayerGetter, texture, this.hotbarPositions[i], y, width, height);
+        }
     }
 
     @ModifyArg(
@@ -89,16 +97,22 @@ public abstract class MixinInGameHudFluent {
             index = 2
     )
     private int drawHotbarSelection(final int x) {
-        if (this.hotbarOffset == 0) {
+        if (this.hotbarWidth == 0 || this.hotbarPositions == null) {
             return x;
         }
 
-        // REVERSED: Selection indicator position depends on which hotbar is active
-        final Position position = Util.getRenderedFluentPosition();
-        return switch (position) {
-            case LEFT -> x + this.hotbarOffset / 2;  // Selection on right hotbar (normal hotbar) - REVERSED
-            case RIGHT -> x - this.hotbarOffset / 2; // Selection on left hotbar (extended hotbar) - REVERSED
-        };
+        // Get current hotbar index (0-based)
+        int currentHotbarIndex = Util.getCurrentHotbarIndex();
+        if (currentHotbarIndex < 0 || currentHotbarIndex >= this.totalHotbars) {
+            currentHotbarIndex = 0;
+        }
+
+        // Calculate selection position for the current hotbar
+        int hotbarBaseX = this.hotbarPositions[currentHotbarIndex];
+        int originalOffset = x - (this.hotbarCenterX - this.hotbarWidth / 2);
+
+        // Add visual indicator that this hotbar is selected
+        return hotbarBaseX + originalOffset;
     }
 
     @WrapOperation(
@@ -120,7 +134,7 @@ public abstract class MixinInGameHudFluent {
             final int seed,
             final Operation<Void> original
     ) {
-        if (this.hotbarOffset == 0) {
+        if (this.hotbarWidth == 0 || this.hotbarPositions == null) {
             original.call(instance, context, x, y, tickCounter, player, stack, seed);
             return;
         }
@@ -128,6 +142,7 @@ public abstract class MixinInGameHudFluent {
         // Calculate slot index from x position
         final int baseX = this.hotbarCenterX - 90 + 2; // Base position for slot 0
         final int slotIndex = (x - baseX) / 20; // Each slot is 20 pixels apart
+        this.currentSlotIndex = slotIndex;
 
         // Validate slot index
         if (slotIndex < 0 || slotIndex >= 9) {
@@ -135,38 +150,79 @@ public abstract class MixinInGameHudFluent {
             return;
         }
 
-        // Calculate positions for left and right hotbars
-        final int leftHotbarX = x - this.hotbarOffset / 2;
-        final int rightHotbarX = x + this.hotbarOffset / 2;
+        // Get current hotbar for highlighting
+        int currentHotbarIndex = Util.getCurrentHotbarIndex();
 
-        // Get the actual hotbar item for this slot
-        final ItemStack hotbarItem = player.getInventory().main.get(slotIndex);
+        // Render the same slot across all hotbars
+        for (int hotbarIndex = 0; hotbarIndex < this.totalHotbars; hotbarIndex++) {
+            // Calculate the x position for this hotbar
+            int hotbarBaseX = this.hotbarPositions[hotbarIndex];
+            int slotX = hotbarBaseX + (x - (this.hotbarCenterX - this.hotbarWidth / 2));
 
-        // Get the inventory row item for this slot
-        final int inventorySlot = slotIndex + Util.SLOT_OFFSET; // SLOT_OFFSET = 27
-        final ItemStack inventoryRowSlotItem;
-        if (inventorySlot >= 27 && inventorySlot <= 35) {
-            inventoryRowSlotItem = player.getInventory().main.get(inventorySlot);
-        } else {
-            inventoryRowSlotItem = ItemStack.EMPTY;
+            // Get the item for this hotbar and slot
+            final ItemStack itemToRender = getItemForHotbar(player, hotbarIndex, slotIndex);
+
+            // Add visual distinction for the active hotbar
+            int renderSeed = seed + (hotbarIndex * 100);
+            if (hotbarIndex == currentHotbarIndex) {
+                renderSeed += 1000; // Different seed for active hotbar to make it visually distinct
+            }
+
+            // Render the item
+            this.renderHotbarItem(context, slotX, y, tickCounter, player, itemToRender, renderSeed);
         }
 
-        // Get current position to determine which hotbar is active
-        final Position currentPosition = Util.getRenderedFluentPosition();
-
-        // REVERSED: Render based on current position:
-        // When LEFT: normal hotbar on right (active), inventory row on left (inactive)
-        // When RIGHT: inventory row on right (active), normal hotbar on left (inactive)
-        if (currentPosition == Position.LEFT) {
-            // Normal hotbar is active (right side) - REVERSED
-            this.renderHotbarItem(context, leftHotbarX, y, tickCounter, player, inventoryRowSlotItem, seed + 100);
-            this.renderHotbarItem(context, rightHotbarX, y, tickCounter, player, hotbarItem, seed);
-        } else {
-            // Inventory row is active (right side) - REVERSED
-            this.renderHotbarItem(context, leftHotbarX, y, tickCounter, player, hotbarItem, seed);
-            this.renderHotbarItem(context, rightHotbarX, y, tickCounter, player, inventoryRowSlotItem, seed + 100);
+        // Mark that we've processed the hotbar change
+        if (Util.hasHotbarJustChanged()) {
+            Util.markHotbarChangeProcessed();
         }
     }
+
+    @Unique
+    private ItemStack getItemForHotbar(PlayerEntity player, int hotbarIndex, int slotIndex) {
+        // Ensure we don't go out of bounds
+        if (slotIndex < 0 || slotIndex >= 9) {
+            return ItemStack.EMPTY;
+        }
+
+        int currentHotbarIndex = Util.getCurrentHotbarIndex();
+        int inventorySlot;
+
+        // The key insight: we need to show what SHOULD be in each hotbar position
+        // based on their logical inventory positions, not their current swapped positions
+
+        if (hotbarIndex == currentHotbarIndex) {
+            // For the currently active hotbar, show what's actually in the hotbar slots
+            // because that's what the player is using
+            inventorySlot = slotIndex; // slots 0-8
+        } else {
+            // For inactive hotbars, we need to show what would be there if we switched to them
+            // This means showing their "home" inventory positions
+
+            // If the current hotbar is 0, then other hotbars show their natural positions
+            if (currentHotbarIndex == 0) {
+                inventorySlot = Util.getInventorySlotForHotbar(hotbarIndex, slotIndex);
+            } else {
+                // If current hotbar is not 0, we need to account for the fact that
+                // the current hotbar's items are now in slots 0-8, and hotbar 0's items
+                // are in the current hotbar's natural position
+                if (hotbarIndex == 0) {
+                    // Hotbar 0 should show what's currently in the active hotbar's natural position
+                    inventorySlot = Util.getInventorySlotForHotbar(currentHotbarIndex, slotIndex);
+                } else {
+                    // Other inactive hotbars show their natural positions
+                    inventorySlot = Util.getInventorySlotForHotbar(hotbarIndex, slotIndex);
+                }
+            }
+        }
+
+        if (inventorySlot == -1 || inventorySlot >= player.getInventory().main.size()) {
+            return ItemStack.EMPTY;
+        }
+
+        return player.getInventory().main.get(inventorySlot);
+    }
+
 
     @ModifyArg(
             method = "renderHotbar",
@@ -178,11 +234,12 @@ public abstract class MixinInGameHudFluent {
             index = 2
     )
     private int drawOffhandItemBackgroundLeft(final int x) {
-        if (this.hotbarOffset == 0) {
+        if (this.hotbarWidth == 0 || this.totalHotbars <= 1) {
             return x;
         }
-        // Move offhand further left to make room for the left hotbar
-        return x - this.hotbarOffset / 2;
+        // Move offhand further left to make room for multiple hotbars
+        int totalOffset = (this.hotbarWidth * (this.totalHotbars - 1)) / 2;
+        return x - totalOffset;
     }
 
     @ModifyArg(
@@ -195,11 +252,12 @@ public abstract class MixinInGameHudFluent {
             index = 1
     )
     private int drawOffhandItemLeft(final int x) {
-        if (this.hotbarOffset == 0) {
+        if (this.hotbarWidth == 0 || this.totalHotbars <= 1) {
             return x;
         }
-        // Move offhand further left to make room for the left hotbar
-        return x - this.hotbarOffset / 2;
+        // Move offhand further left to make room for multiple hotbars
+        int totalOffset = (this.hotbarWidth * (this.totalHotbars - 1)) / 2;
+        return x - totalOffset;
     }
 
     @ModifyArg(
@@ -212,11 +270,12 @@ public abstract class MixinInGameHudFluent {
             index = 2
     )
     private int drawOffhandItemBackgroundRight(final int x) {
-        if (this.hotbarOffset == 0) {
+        if (this.hotbarWidth == 0 || this.totalHotbars <= 1) {
             return x;
         }
-        // Move offhand further right to make room for the right hotbar
-        return x + this.hotbarOffset / 2;
+        // Move offhand further right to make room for multiple hotbars
+        int totalOffset = (this.hotbarWidth * (this.totalHotbars - 1)) / 2;
+        return x + totalOffset;
     }
 
     @ModifyArg(
@@ -229,10 +288,11 @@ public abstract class MixinInGameHudFluent {
             index = 1
     )
     private int drawOffhandItemRight(final int x) {
-        if (this.hotbarOffset == 0) {
+        if (this.hotbarWidth == 0 || this.totalHotbars <= 1) {
             return x;
         }
-        // Move offhand further right to make room for the right hotbar
-        return x + this.hotbarOffset / 2;
+        // Move offhand further right to make room for multiple hotbars
+        int totalOffset = (this.hotbarWidth * (this.totalHotbars - 1)) / 2;
+        return x + totalOffset;
     }
 }
