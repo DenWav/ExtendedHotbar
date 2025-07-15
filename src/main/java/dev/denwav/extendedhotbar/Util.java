@@ -32,22 +32,19 @@ public final class Util {
     public static final int LEFT_BOTTOM_ROW_SLOT_INDEX = 27;
     private static int currentHotbarIndex = 0;
     private static int previousHotbarIndex = 0;
-    private static boolean hotbarJustChanged = false;
-    private static boolean fluentInventorySwapped = false;
-
     private static final int LEFT_HOTBAR_SLOT_INDEX = 36;
     private static final int BOTTOM_RIGHT_CRAFTING_SLOT_INDEX = 4;
-
     public static final int DISTANCE = -22;
 
     // Fixed: Use the correct slot offset for the second row of inventory (slots 27-35)
     public static final int SLOT_OFFSET = LEFT_BOTTOM_ROW_SLOT_INDEX;
 
-    public static ConfigHolder<ModConfig> configHolder = null;
-
-    public static ConfigHolder<ExtendedHotbarState> stateHolder = null;
-
+    private static boolean hotbarJustChanged = false;
+    private static boolean fluentInventorySwapped = false;
     private static boolean swapRender = false;
+
+    public static ConfigHolder<ModConfig> configHolder = null;
+    public static ConfigHolder<ExtendedHotbarState> stateHolder = null;
 
     private Util() {}
 
@@ -63,28 +60,6 @@ public final class Util {
         return config.enabled && config.fluent;
     }
 
-    public static ExtendedHotbarState.Position getFluentPosition() {
-        if (stateHolder == null) {
-            return ExtendedHotbarState.Position.LEFT;
-        }
-        return stateHolder.getConfig().position;
-    }
-
-    public static ExtendedHotbarState.Position getRenderedFluentPosition() {
-        if (stateHolder == null) {
-            return ExtendedHotbarState.Position.LEFT;
-        }
-        final ExtendedHotbarState state = stateHolder.getConfig();
-        if (swapRender) {
-            return switch (state.position) {
-                case LEFT -> ExtendedHotbarState.Position.RIGHT ;
-                case RIGHT -> ExtendedHotbarState.Position.LEFT;
-            };
-        } else {
-            return state.position;
-        }
-    }
-
     public static boolean isSwappingEnabled() {
         if (configHolder == null) {
             return false;
@@ -95,10 +70,6 @@ public final class Util {
 
     public static int getCurrentHotbarIndex() {
         return currentHotbarIndex;
-    }
-
-    public static int getPreviousHotbarIndex() {
-        return previousHotbarIndex;
     }
 
     public static boolean hasHotbarJustChanged() {
@@ -152,20 +123,6 @@ public final class Util {
         }
     }
 
-    // Add method to detect which hotbar a slot belongs to
-    public static int getHotbarIndexForSlot(int inventorySlot) {
-        if (inventorySlot >= 0 && inventorySlot <= 8) {
-            return 0; // Normal hotbar
-        } else if (inventorySlot >= 9 && inventorySlot <= 17) {
-            return 1; // 2nd row
-        } else if (inventorySlot >= 18 && inventorySlot <= 26) {
-            return 2; // 3rd row
-        } else if (inventorySlot >= 27 && inventorySlot <= 35) {
-            return 3; // 4th row
-        }
-        return -1; // Not a hotbar slot
-    }
-
     public static void performMultiHotbarSwap(MinecraftClient client, boolean isScrolling) {
         if (client.player == null) return;
 
@@ -213,10 +170,6 @@ public final class Util {
         }
     }
 
-    public static void swapRenderedPosition() {
-        swapRender = true;
-    }
-
     public static boolean isRenderSwapped() {
         return swapRender;
     }
@@ -237,10 +190,6 @@ public final class Util {
 
         // Reset the fluent inventory state when switching positions
         fluentInventorySwapped = false;
-    }
-
-    public static boolean isFluentInventorySwapped() {
-        return fluentInventorySwapped;
     }
 
     public static void setFluentInventorySwapped(boolean swapped) {
@@ -300,12 +249,6 @@ public final class Util {
             final int syncId,
             final int slotId
     ) {
-        /*
-         * Implementation note:
-         * There are fancy click mechanisms to swap item stacks without using a temporary slot, but when swapping between two identical item
-         * stacks, things can get messed up. Using a temporary slot that we know is guaranteed to be empty is the safest option.
-         */
-
         // Move hotbar item to crafting slot
         interactionManager.clickSlot(syncId, slotId + Util.LEFT_HOTBAR_SLOT_INDEX, 0, SlotActionType.PICKUP, player);
         interactionManager.clickSlot(syncId, Util.BOTTOM_RIGHT_CRAFTING_SLOT_INDEX, 0, SlotActionType.PICKUP, player);

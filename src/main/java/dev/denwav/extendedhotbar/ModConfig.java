@@ -27,10 +27,9 @@ public class ModConfig implements ConfigData {
     @ConfigEntry.Gui.Tooltip
     @ConfigEntry.BoundedDiscrete(min = 2, max = 4)
     public int numberOfHotbars = 2; // Default to 2 hotbars (current behavior)
+
     @ConfigEntry.Gui.Tooltip
     public boolean enabled = true;
-
-    public boolean includeArmorSlots = false;
 
     @ConfigEntry.Gui.Tooltip
     public boolean invert = false;

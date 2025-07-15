@@ -64,5 +64,4 @@ public class MixinMouseFluent {
             Util.performMultiHotbarSwap(this.client, true);
         }
     }
-
 }
