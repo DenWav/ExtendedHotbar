@@ -24,6 +24,7 @@ import dev.denwav.extendedhotbar.Util;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.LayeredDrawer;
 import net.minecraft.client.gui.hud.InGameHud;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -34,54 +35,57 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.function.Function;
+
 @Mixin(InGameHud.class)
 public abstract class MixinInGameHudSwapping {
 
     @Shadow protected abstract void renderHotbarItem(DrawContext context, int x, int y, RenderTickCounter tickCounter, PlayerEntity player, ItemStack stack, int seed);
 
     @WrapOperation(
-        method = "renderHotbar",
-        at = @At(
-            value = "INVOKE",
-            ordinal = 0,
-            target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIII)V"
-        )
+            method = "renderHotbar",
+            at = @At(
+                    value = "INVOKE",
+                    ordinal = 0,
+                    target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Ljava/util/function/Function;Lnet/minecraft/util/Identifier;IIII)V"
+            )
     )
     private void drawTopHotbarBackground(
-        final DrawContext context,
-        final Identifier texture,
-        final int x,
-        final int y,
-        final int width,
-        final int height,
-        final Operation<Void> original
+            final DrawContext context,
+            final Function<Identifier, RenderLayer> renderLayerGetter,
+            final Identifier texture,
+            final int x,
+            final int y,
+            final int width,
+            final int height,
+            final Operation<Void> original
     ) {
-        original.call(context, texture, x, y, width, height);
+        original.call(context, renderLayerGetter, texture, x, y, width, height);
 
         if (Util.isSwappingEnabled()) {
-            context.drawGuiTexture(texture, x, y + Util.DISTANCE, width, height);
+            context.drawGuiTexture(renderLayerGetter, texture, x, y + Util.DISTANCE, width, height);
         }
     }
 
     @WrapOperation(
-        method = "renderHotbar",
-        at = @At(
-            value = "INVOKE",
-            ordinal = 0,
-            target = "Lnet/minecraft/client/gui/hud/InGameHud;renderHotbarItem(Lnet/minecraft/client/gui/DrawContext;IILnet/minecraft/client/render/RenderTickCounter;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;I)V"
-        )
+            method = "renderHotbar",
+            at = @At(
+                    value = "INVOKE",
+                    ordinal = 0,
+                    target = "Lnet/minecraft/client/gui/hud/InGameHud;renderHotbarItem(Lnet/minecraft/client/gui/DrawContext;IILnet/minecraft/client/render/RenderTickCounter;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;I)V"
+            )
     )
     private void drawTopHotbarItem(
-        final InGameHud instance,
-        final DrawContext context,
-        final int x,
-        final int y,
-        final RenderTickCounter tickCounter,
-        final PlayerEntity player,
-        final ItemStack stack,
-        final int seed,
-        final Operation<Void> original,
-        @Local(ordinal = 4) final int loopIndex
+            final InGameHud instance,
+            final DrawContext context,
+            final int x,
+            final int y,
+            final RenderTickCounter tickCounter,
+            final PlayerEntity player,
+            final ItemStack stack,
+            final int seed,
+            final Operation<Void> original,
+            @Local(ordinal = 4) final int loopIndex
     ) {
         original.call(instance, context, x, y, tickCounter, player, stack, seed);
 
@@ -91,13 +95,13 @@ public abstract class MixinInGameHudSwapping {
     }
 
     @Inject(
-        method = "renderOverlayMessage",
-        at = @At(
-            value = "INVOKE",
-            shift = At.Shift.AFTER,
-            ordinal = 0,
-            target = "Lnet/minecraft/client/util/math/MatrixStack;translate(FFF)V"
-        )
+            method = "renderOverlayMessage",
+            at = @At(
+                    value = "INVOKE",
+                    shift = At.Shift.AFTER,
+                    ordinal = 0,
+                    target = "Lnet/minecraft/client/util/math/MatrixStack;translate(FFF)V"
+            )
     )
     private void moveActionBarTextUp(final CallbackInfo ci, @Local(argsOnly = true) final DrawContext context) {
         // We don't need to push a matrix or reset, because the surrounding code we are injecting in
@@ -120,6 +124,6 @@ public abstract class MixinInGameHudSwapping {
             if (Util.isSwappingEnabled()) {
                 Util.reset(context.getMatrices());
             }
-		});
+        });
     }
 }

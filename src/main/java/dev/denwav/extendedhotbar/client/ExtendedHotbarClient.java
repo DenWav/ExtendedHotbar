@@ -30,9 +30,9 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ingame.AbstractInventoryScreen;
 import net.minecraft.client.gui.screen.ingame.CreativeInventoryScreen;
 import net.minecraft.client.gui.screen.ingame.HorseScreen;
+import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
@@ -43,18 +43,21 @@ import static org.lwjgl.glfw.GLFW.*;
 public class ExtendedHotbarClient implements ClientModInitializer {
 
     private static final KeyBinding swapKeyBinding = new KeyBinding(
-        "key.extendedhotbar.switch",
-        InputUtil.Type.KEYSYM,
-        GLFW_KEY_R,
-        "key.extendedhotbar"
+            "key.extendedhotbar.switch",
+            InputUtil.Type.KEYSYM,
+            GLFW_KEY_R,
+            "key.extendedhotbar"
     );
 
     private static final KeyBinding toggleKeyBinding = new KeyBinding(
-        "key.extendedhotbar.toggle",
-        InputUtil.Type.KEYSYM,
-        GLFW_KEY_EQUAL,
-        "key.extendedhotbar"
+            "key.extendedhotbar.toggle",
+            InputUtil.Type.KEYSYM,
+            GLFW_KEY_EQUAL,
+            "key.extendedhotbar"
     );
+
+    // Track if we've swapped items for inventory display in fluent mode
+    private static boolean fluentInventorySwapped = false;
 
     @Override
     public void onInitializeClient() {
@@ -105,31 +108,52 @@ public class ExtendedHotbarClient implements ClientModInitializer {
     }
 
     private void onScreenOpen(
-        final MinecraftClient client,
-        final Screen screen,
-        final int scaledWidth,
-        final int scaledHeight
+            final MinecraftClient client,
+            final Screen screen,
+            final int scaledWidth,
+            final int scaledHeight
     ) {
-        if (!(screen instanceof AbstractInventoryScreen<?>) && !(screen instanceof HorseScreen)) {
+        if (!(screen instanceof InventoryScreen) && !(screen instanceof HorseScreen)) {
             return;
         }
         final ClientPlayerInteractionManager manager = client.interactionManager;
         if (manager != null && manager.hasCreativeInventory()) {
             if (!(screen instanceof CreativeInventoryScreen)) {
-                // Creative inventories are opened after the normal inventory is opened, so we want to ignore when
-                // the first one closes (the non-creative inventory).
-                // It goes setScreen(InventoryScreen) -> InventoryScreen.init() -> setScreen(CreativeInventoryScreen)
                 return;
             }
         }
+
+        // Handle fluent mode inventory opening
+        if (Util.isFluent()) {
+            // In fluent mode, we should NOT swap items when opening inventory
+            // The inventory should show the actual state of the items
+            // No swapping needed - just track that inventory is open
+            Util.setFluentInventorySwapped(false);
+        } else {
+            // Handle non-fluent mode
+            if (Util.isRenderSwapped()) {
+                Util.resetRenderedPosition();
+                Util.performSwap(client, true);
+            }
+        }
+
         ScreenEvents.remove(screen).register(this::onScreenClose);
     }
 
     private void onScreenClose(final Screen screen) {
-        if (Util.isRenderSwapped()) {
-            // swap back
-            Util.resetRenderedPosition();
-            Util.performSwap(MinecraftClient.getInstance(), true);
+        // Handle fluent mode inventory closing
+        if (Util.isFluent()) {
+            // In fluent mode, no swapping should happen when closing inventory
+            // The items should remain in their actual positions
+            // Just reset the flag
+            Util.setFluentInventorySwapped(true);
+        } else {
+            // Handle non-fluent mode
+            if (Util.isRenderSwapped()) {
+                Util.resetRenderedPosition();
+                Util.performSwap(MinecraftClient.getInstance(), true);
+            }
         }
     }
+
 }

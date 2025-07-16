@@ -5,6 +5,8 @@
   "text.autoconfig.extendedhotbar.title":  "Extended Hotbar",
   "text.autoconfig.extendedhotbar.option.enabled": "Enabled",
   "text.autoconfig.extendedhotbar.option.enabled.@Tooltip": "Toggle Extended Hotbar on and off",
+  "text.autoconfig.extendedhotbar.option.numberOfHotbars": "Number of hotbars",
+  "text.autoconfig.extendedhotbar.option.numberOfHotbars.@Tooltip": "The number of additional hotbars (2-4)",
   "text.autoconfig.extendedhotbar.option.invert": "Invert full row / single item swap",
   "text.autoconfig.extendedhotbar.option.invert.@Tooltip": "Invert full row / single item swap",
   "text.autoconfig.extendedhotbar.option.enableDoubleTap": "Enable double-tap to swap",
