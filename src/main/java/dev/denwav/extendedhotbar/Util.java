@@ -124,48 +124,44 @@ public final class Util {
     }
 
     public static void performMultiHotbarSwap(MinecraftClient client, boolean isScrolling) {
-        if (client.player == null) return;
+        if (client.player == null || client.interactionManager == null) return;
 
         PlayerInventory inventory = client.player.getInventory();
 
-        // Only swap if we actually changed hotbars
-        if (currentHotbarIndex == previousHotbarIndex) {
-            return;
-        }
+        if (currentHotbarIndex == previousHotbarIndex) return;
 
-        // Get the inventory slot ranges for both hotbars
+        final InventoryScreen screen = new InventoryScreen(client.player);
+        final int syncId = screen.getScreenHandler().syncId;
+        final ClientPlayerInteractionManager im = client.interactionManager;
+        final ClientPlayerEntity player = client.player;
+
         int prevRowStart = getInventorySlotForHotbar(previousHotbarIndex, 0);
         int currentRowStart = getInventorySlotForHotbar(currentHotbarIndex, 0);
 
-        // If previous hotbar was not the main hotbar (0), swap it back
+        // Swap out previous hotbar (back into its row)
         if (previousHotbarIndex != 0 && prevRowStart != -1) {
             for (int i = 0; i < 9; i++) {
-                int hotbarSlot = i;
-                int prevSlot = prevRowStart + i;
+                int hotbarSlotId = LEFT_HOTBAR_SLOT_INDEX + i;
+                int rowSlotId = prevRowStart + i;
 
-                if (prevSlot < inventory.main.size()) {
-                    ItemStack hotbarItem = inventory.main.get(hotbarSlot);
-                    ItemStack prevRowItem = inventory.main.get(prevSlot);
-
-                    inventory.main.set(hotbarSlot, prevRowItem);
-                    inventory.main.set(prevSlot, hotbarItem);
-                }
+                // Hotbar slot -> pick up
+                im.clickSlot(syncId, hotbarSlotId, 0, SlotActionType.PICKUP, player);
+                // Row slot -> swap
+                im.clickSlot(syncId, rowSlotId, 0, SlotActionType.PICKUP, player);
+                // Place original hotbar item
+                im.clickSlot(syncId, hotbarSlotId, 0, SlotActionType.PICKUP, player);
             }
         }
 
-        // If current hotbar is not the main hotbar (0), swap it in
+        // Swap in new hotbar (from its row into main hotbar)
         if (currentHotbarIndex != 0 && currentRowStart != -1) {
             for (int i = 0; i < 9; i++) {
-                int hotbarSlot = i;
-                int currentSlot = currentRowStart + i;
+                int hotbarSlotId = LEFT_HOTBAR_SLOT_INDEX + i;
+                int rowSlotId = currentRowStart + i;
 
-                if (currentSlot < inventory.main.size()) {
-                    ItemStack hotbarItem = inventory.main.get(hotbarSlot);
-                    ItemStack currentRowItem = inventory.main.get(currentSlot);
-
-                    inventory.main.set(hotbarSlot, currentRowItem);
-                    inventory.main.set(currentSlot, hotbarItem);
-                }
+                im.clickSlot(syncId, hotbarSlotId, 0, SlotActionType.PICKUP, player);
+                im.clickSlot(syncId, rowSlotId, 0, SlotActionType.PICKUP, player);
+                im.clickSlot(syncId, hotbarSlotId, 0, SlotActionType.PICKUP, player);
             }
         }
     }
