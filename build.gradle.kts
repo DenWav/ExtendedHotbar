@@ -1,8 +1,8 @@
 import org.gradle.jvm.tasks.Jar
 
 plugins {
-    id("fabric-loom") version "1.6.9"
-    id("org.cadixdev.licenser") version "0.6.1"
+    id("fabric-loom") version "1.10.5"
+    id("org.cadixdev.licenser") version "0.6.+"
 }
 
 val modVersion: String by project
@@ -33,10 +33,10 @@ dependencies {
     minecraft("com.mojang:minecraft:$minecraftVersion")
     mappings("net.fabricmc:yarn:$yarnMappings:v2")
     modImplementation("net.fabricmc:fabric-loader:$loaderVersion")
-    modImplementation("net.fabricmc.fabric-api:fabric-api:0.92.0+1.20.1")
+    modImplementation("net.fabricmc.fabric-api:fabric-api:0.92.6+1.20.1")
 
-    modInclude("me.shedaniel.cloth:cloth-config-fabric:11.0.99")
-    modImplementation("com.terraformersmc:modmenu:7.2.1")
+    modInclude("me.shedaniel.cloth:cloth-config-fabric:11.1.136")
+    modImplementation("com.terraformersmc:modmenu:7.2.2")
 }
 
 java {

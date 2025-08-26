@@ -21,12 +21,13 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import dev.denwav.extendedhotbar.Util;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
-import net.minecraft.entity.JumpingMount;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -35,6 +36,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(InGameHud.class)
 public abstract class MixinInGameHudSwapping {
+
+    @Shadow @Final private MinecraftClient client;
 
     @Shadow protected abstract void renderHotbarItem(DrawContext context, int x, int y, float f, PlayerEntity player, ItemStack stack, int seed);
 
@@ -100,7 +103,7 @@ public abstract class MixinInGameHudSwapping {
             target = "Lnet/minecraft/client/util/math/MatrixStack;translate(FFF)V"
         )
     )
-    private void moveActionBarTextUp(final DrawContext context, final float tickDelta, final CallbackInfo ci) {
+    private void moveActionBarTextUp(final CallbackInfo ci, @Local(argsOnly = true) final DrawContext context) {
         // We don't need to push a matrix or reset, because the surrounding code we are injecting in
         // to does that for us.
         if (Util.isSwappingEnabled()) {
@@ -109,60 +112,62 @@ public abstract class MixinInGameHudSwapping {
     }
 
     @Inject(
-        id = "move",
         method = {
-            "renderMountHealth",
-            "renderStatusBars",
-            "renderHeldItemTooltip",
+            "renderMountJumpBar",
+            "renderExperienceBar",
+            "renderHeldItemTooltip"
         },
-        at = {
-            @At(value = "HEAD", id = "head"),
-            @At(value = "RETURN", id = "return")
-        }
+        at = @At("HEAD")
     )
-    private void moveHud(final DrawContext context, final CallbackInfo ci) {
+    private void moveBarsUp(final CallbackInfo ci, @Local(argsOnly = true) final DrawContext context) {
         if (Util.isSwappingEnabled()) {
-            if ("move:head".equals(ci.getId())) {
-                Util.moveUp(context.getMatrices());
-            } else {
-                Util.reset(context.getMatrices());
-            }
+            Util.moveUp(context.getMatrices());
+        }
+    }
+    @Inject(
+        method = {
+            "renderMountJumpBar",
+            "renderExperienceBar",
+            "renderHeldItemTooltip"
+        },
+        at = @At("TAIL")
+    )
+    private void moveBarsDown(final CallbackInfo ci, @Local(argsOnly = true) final DrawContext context) {
+        if (Util.isSwappingEnabled()) {
+            Util.reset(context.getMatrices());
         }
     }
 
     @Inject(
-        id = "move",
-        method = "renderExperienceBar",
-        at = {
-            @At(value = "HEAD", id = "head"),
-            @At(value = "RETURN", id = "return")
-        }
+        method = "render",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;hasStatusBars()Z"
+        )
     )
-    private void moveExpBar(final DrawContext context, final int x, final CallbackInfo ci) {
+    private void moveHudUp(final CallbackInfo ci, @Local(argsOnly = true) final DrawContext context) {
         if (Util.isSwappingEnabled()) {
-            if ("move:head".equals(ci.getId())) {
-                Util.moveUp(context.getMatrices());
-            } else {
-                Util.reset(context.getMatrices());
-            }
+            Util.moveUp(context.getMatrices());
         }
     }
-
     @Inject(
-        id = "move",
-        method = "renderMountJumpBar",
+        method = "render",
         at = {
-            @At(value = "HEAD", id = "head"),
-            @At(value = "RETURN", id = "return")
+            @At(
+                value = "INVOKE",
+                target = "Lnet/minecraft/client/gui/hud/InGameHud;renderHeldItemTooltip(Lnet/minecraft/client/gui/DrawContext;)V",
+                shift = At.Shift.AFTER
+            ),
+            @At(
+                value = "INVOKE",
+                target = "Lnet/minecraft/client/gui/hud/SpectatorHud;render(Lnet/minecraft/client/gui/DrawContext;)V",
+                shift = At.Shift.AFTER
+            )
         }
     )
-    private void moveMountJumpBarUp(final JumpingMount mount, final DrawContext context, final int x, final CallbackInfo ci) {
+    private void moveHudDown(final CallbackInfo ci, @Local(argsOnly = true) final DrawContext context) {
         if (Util.isSwappingEnabled()) {
-            if ("move:head".equals(ci.getId())) {
-                Util.moveUp(context.getMatrices());
-            } else {
-                Util.reset(context.getMatrices());
-            }
+            Util.reset(context.getMatrices());
         }
     }
 }
