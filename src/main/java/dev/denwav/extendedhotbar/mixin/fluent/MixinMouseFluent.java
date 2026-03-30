@@ -19,50 +19,49 @@ package dev.denwav.extendedhotbar.mixin.fluent;
 
 import dev.denwav.extendedhotbar.Util;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.client.Mouse;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(PlayerInventory.class)
-public abstract class MixinPlayerInventoryFluent {
+@Mixin(Mouse.class)
+public class MixinMouseFluent {
 
-    @Shadow
-    private int selectedSlot;
+    @Shadow @Final private MinecraftClient client;
 
     @Inject(
-            method = "setSelectedSlot",
-            at = @At("HEAD")
+            method = "onMouseScroll",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/entity/player/PlayerInventory;setSelectedSlot(I)V"
+            )
     )
-    private void onSetSelectedSlot(int slot, CallbackInfo ci) {
+    private void onMouseScroll(long window, double horizontal, double vertical, CallbackInfo ci) {
         if (!Util.isFluent()) {
             return;
         }
 
-        // Check if the new slot is out of bounds (this happens during scrolling)
-        if (slot < 0 || slot >= 9) {
-            // Switch position and swap hotbars
-            Util.switchFluentPosition();
-            Util.performSwap(MinecraftClient.getInstance(), true);
-        }
-    }
-
-    @Inject(
-            method = "setSelectedSlot",
-            at = @At("TAIL")
-    )
-    private void afterSetSelectedSlot(int slot, CallbackInfo ci) {
-        if (!Util.isFluent()) {
+        if (this.client.player == null) {
             return;
         }
 
-        // Normalize the selected slot back to 0-8 range if it went out of bounds
-        if (this.selectedSlot < 0) {
-            this.selectedSlot = 8;
-        } else if (this.selectedSlot >= 9) {
-            this.selectedSlot = 0;
+        // Get the current selected slot before it changes
+        int currentSlot = this.client.player.getInventory().getSelectedSlot();
+
+        // Check if we would scroll past the hotbar bounds
+        if ((currentSlot == 0 && vertical > 0) || (currentSlot == 8 && vertical < 0)) {
+            // Switch to next/previous hotbar based on scroll direction
+            if (vertical > 0) {
+                Util.switchToPreviousHotbar();
+            } else {
+                Util.switchToNextHotbar();
+            }
+
+            // Only perform swap when actually switching hotbars, not just changing the index
+            Util.performMultiHotbarSwap(this.client, true);
         }
     }
 }

@@ -30,7 +30,6 @@ import net.minecraft.item.Item;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
-import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -46,8 +45,8 @@ public abstract class MixinMinecraftClient {
     @Shadow public ClientPlayerEntity player;
 
     @Inject(
-        method = "doItemPick",
-        at = @At("HEAD")
+            method = "doItemPick",
+            at = @At("HEAD")
     )
     private void beforeDoItemPick(final CallbackInfo ci) {
         if (!Util.isEnabled()) {
@@ -105,15 +104,14 @@ public abstract class MixinMinecraftClient {
     @Inject(
             method = "handleInputEvents",
             at = @At(
-                    value = "FIELD",
-                    target = "Lnet/minecraft/entity/player/PlayerInventory;selectedSlot:I",
-                    opcode = Opcodes.PUTFIELD
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/entity/player/PlayerInventory;setSelectedSlot(I)V"
             )
     )
     private void handleInputEvents(CallbackInfo ci, @Local(ordinal = 0) int loopIndex) {
         if (!Util.configHolder.getConfig().enableDoubleTap) return;
 
-        if (this.player.getInventory().selectedSlot == loopIndex) {
+        if (this.player.getInventory().getSelectedSlot() == loopIndex) {
             Util.performSwap((MinecraftClient) (Object) this, false);
         }
     }

@@ -1,5 +1,5 @@
 plugins {
-    id("fabric-loom") version "1.11.4"
+    id("fabric-loom") version "1.13.6"
     id("org.cadixdev.licenser") version "0.6.1"
 }
 
@@ -25,16 +25,18 @@ repositories {
     mavenCentral()
     maven("https://maven.terraformersmc.com/releases/")
     maven("https://maven.shedaniel.me/")
+    maven("https://maven.nucleoid.xyz/") { name = "Nucleoid" }
 }
 
 dependencies {
     minecraft("com.mojang:minecraft:$minecraftVersion")
     mappings("net.fabricmc:yarn:$yarnMappings:v2")
     modImplementation("net.fabricmc:fabric-loader:$loaderVersion")
-    modImplementation("net.fabricmc.fabric-api:fabric-api:0.106.0+1.21.1")
+    modImplementation("net.fabricmc.fabric-api:fabric-api:0.141.3+1.21.11")
 
-    modInclude("me.shedaniel.cloth:cloth-config-fabric:15.0.140")
-    modImplementation("com.terraformersmc:modmenu:11.0.3")
+    modInclude("me.shedaniel.cloth:cloth-config-fabric:17.0.144")
+    modImplementation("com.terraformersmc:modmenu:17.0.0")
+    modImplementation("eu.pb4:placeholder-api:2.8.2+1.21.10")
 }
 
 java {
