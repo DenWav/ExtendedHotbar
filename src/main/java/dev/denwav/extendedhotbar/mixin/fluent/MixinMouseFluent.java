@@ -49,7 +49,7 @@ public class MixinMouseFluent {
         }
 
         // Get the current selected slot before it changes
-        int currentSlot = this.client.player.getInventory().selectedSlot;
+        int currentSlot = this.client.player.getInventory().getSelectedSlot();
 
         // Check if we would scroll past the hotbar bounds
         if ((currentSlot == 0 && vertical > 0) || (currentSlot == 8 && vertical < 0)) {

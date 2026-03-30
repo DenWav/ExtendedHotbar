@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinPlayerInventoryFluent {
 
     @Shadow
-    public int selectedSlot;
+    private int selectedSlot;
 
     @Inject(
             method = "setSelectedSlot",

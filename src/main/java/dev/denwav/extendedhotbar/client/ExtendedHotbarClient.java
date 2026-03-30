@@ -36,6 +36,7 @@ import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.util.Identifier;
 
 import static org.lwjgl.glfw.GLFW.*;
 
@@ -46,14 +47,14 @@ public class ExtendedHotbarClient implements ClientModInitializer {
             "key.extendedhotbar.switch",
             InputUtil.Type.KEYSYM,
             GLFW_KEY_R,
-            "key.extendedhotbar"
+            KeyBinding.Category.create(Identifier.of("category.extendedhotbar"))
     );
 
     private static final KeyBinding toggleKeyBinding = new KeyBinding(
             "key.extendedhotbar.toggle",
             InputUtil.Type.KEYSYM,
             GLFW_KEY_EQUAL,
-            "key.extendedhotbar"
+            KeyBinding.Category.create(Identifier.of("key.extendedhotbar"))
     );
 
     // Track if we've swapped items for inventory display in fluent mode
@@ -117,7 +118,7 @@ public class ExtendedHotbarClient implements ClientModInitializer {
             return;
         }
         final ClientPlayerInteractionManager manager = client.interactionManager;
-        if (manager != null && manager.hasCreativeInventory()) {
+        if (manager != null && client.player.isInCreativeMode()) {
             if (!(screen instanceof CreativeInventoryScreen)) {
                 return;
             }

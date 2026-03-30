@@ -19,11 +19,11 @@ package dev.denwav.extendedhotbar.mixin.fluent;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import dev.denwav.extendedhotbar.ExtendedHotbarState.Position;
+import com.llamalad7.mixinextras.sugar.Local;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import dev.denwav.extendedhotbar.Util;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -34,8 +34,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 
-import java.util.function.Function;
-
 @Mixin(InGameHud.class)
 public abstract class MixinInGameHudFluent {
 
@@ -45,30 +43,22 @@ public abstract class MixinInGameHudFluent {
     @Unique private int totalHotbars;
     @Unique private int hotbarCenterX;
     @Unique private int[] hotbarPositions;
-    @Unique private int currentSlotIndex;
 
     @WrapOperation(
             method = "renderHotbar",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Ljava/util/function/Function;Lnet/minecraft/util/Identifier;IIII)V",
+                    target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/util/Identifier;IIII)V",
                     ordinal = 0
             )
     )
     private void drawExtraHotbarBackground(
-            final DrawContext context,
-            final Function<Identifier, RenderLayer> renderLayerGetter,
-            final Identifier texture,
-            final int x,
-            final int y,
-            final int width,
-            final int height,
-            final Operation<Void> original
-    ) {
+            DrawContext instance, RenderPipeline pipeline, Identifier sprite, int x, int y, int width, int height, Operation<Void> original, @Local(argsOnly = true) DrawContext context)
+    {
         if (!Util.isFluent()) {
             this.hotbarWidth = 0;
             this.totalHotbars = 1;
-            original.call(context, renderLayerGetter, texture, x, y, width, height);
+            original.call(instance, pipeline, sprite, x, y, width, height);
             return;
         }
 
@@ -83,7 +73,7 @@ public abstract class MixinInGameHudFluent {
 
         for (int i = 0; i < this.totalHotbars; i++) {
             this.hotbarPositions[i] = startX + (i * this.hotbarWidth);
-            context.drawGuiTexture(renderLayerGetter, texture, this.hotbarPositions[i], y, width, height);
+            context.drawGuiTexture(pipeline, sprite, this.hotbarPositions[i], y, width, height);
         }
     }
 
@@ -91,14 +81,14 @@ public abstract class MixinInGameHudFluent {
             method = "renderHotbar",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Ljava/util/function/Function;Lnet/minecraft/util/Identifier;IIII)V",
+                    target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/util/Identifier;IIII)V",
                     ordinal = 1
             ),
-            index = 2
+            index = 3
     )
-    private int drawHotbarSelection(final int x) {
+    private int drawHotbarSelection(final int y) {
         if (this.hotbarWidth == 0 || this.hotbarPositions == null) {
-            return x;
+            return y;
         }
 
         // Get current hotbar index (0-based)
@@ -107,12 +97,8 @@ public abstract class MixinInGameHudFluent {
             currentHotbarIndex = 0;
         }
 
-        // Calculate selection position for the current hotbar
-        int hotbarBaseX = this.hotbarPositions[currentHotbarIndex];
-        int originalOffset = x - (this.hotbarCenterX - this.hotbarWidth / 2);
-
-        // Add visual indicator that this hotbar is selected
-        return hotbarBaseX + originalOffset;
+        // The selection indicator stays in the same vertical position
+        return y;
     }
 
     @WrapOperation(
@@ -124,17 +110,9 @@ public abstract class MixinInGameHudFluent {
             )
     )
     private void drawExtraHotbarItem(
-            final InGameHud instance,
-            final DrawContext context,
-            final int x,
-            final int y,
-            final RenderTickCounter tickCounter,
-            final PlayerEntity player,
-            final ItemStack stack,
-            final int seed,
-            final Operation<Void> original
-    ) {
-        if (this.hotbarWidth == 0 || this.hotbarPositions == null) {
+            InGameHud instance, DrawContext context, int x, int y, RenderTickCounter tickCounter, PlayerEntity player, ItemStack stack, int seed, Operation<Void> original)
+    {
+        if (this.hotbarWidth == 0 || this.hotbarPositions == null || !Util.isFluent()) {
             original.call(instance, context, x, y, tickCounter, player, stack, seed);
             return;
         }
@@ -142,7 +120,6 @@ public abstract class MixinInGameHudFluent {
         // Calculate slot index from x position
         final int baseX = this.hotbarCenterX - 90 + 2; // Base position for slot 0
         final int slotIndex = (x - baseX) / 20; // Each slot is 20 pixels apart
-        this.currentSlotIndex = slotIndex;
 
         // Validate slot index
         if (slotIndex < 0 || slotIndex >= 9) {
@@ -216,19 +193,18 @@ public abstract class MixinInGameHudFluent {
             }
         }
 
-        if (inventorySlot == -1 || inventorySlot >= player.getInventory().main.size()) {
+        if (inventorySlot == -1 || inventorySlot >= 36) {
             return ItemStack.EMPTY;
         }
 
-        return player.getInventory().main.get(inventorySlot);
+        return player.getInventory().getStack(inventorySlot);
     }
-
 
     @ModifyArg(
             method = "renderHotbar",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Ljava/util/function/Function;Lnet/minecraft/util/Identifier;IIII)V",
+                    target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/util/Identifier;IIII)V",
                     ordinal = 2
             ),
             index = 2
@@ -264,7 +240,7 @@ public abstract class MixinInGameHudFluent {
             method = "renderHotbar",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Ljava/util/function/Function;Lnet/minecraft/util/Identifier;IIII)V",
+                    target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/util/Identifier;IIII)V",
                     ordinal = 3
             ),
             index = 2

@@ -24,8 +24,8 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.SlotActionType;
+import org.joml.Matrix3x2fStack;
 
 public final class Util {
 
@@ -192,13 +192,13 @@ public final class Util {
         fluentInventorySwapped = swapped;
     }
 
-    public static void moveUp(final MatrixStack matrixStack) {
-        matrixStack.push();
-        matrixStack.translate(0, DISTANCE, 0);
+    public static void moveUp(final Matrix3x2fStack matrixStack) {
+        matrixStack.pushMatrix();
+        matrixStack.translate(0, DISTANCE);
     }
 
-    public static void reset(final MatrixStack matrixStack) {
-        matrixStack.pop();
+    public static void reset(final Matrix3x2fStack matrixStack) {
+        matrixStack.popMatrix();
     }
 
     public static void performSwap(final MinecraftClient client, final boolean fullRow) {
@@ -221,7 +221,7 @@ public final class Util {
         } else {
             final ClientPlayerInteractionManager interactionManager = client.interactionManager;
             if (interactionManager != null) {
-                final int currentItem = player.getInventory().selectedSlot;
+                final int currentItem = player.getInventory().getSelectedSlot();
                 swapItem(interactionManager, player, syncId, currentItem);
             }
         }

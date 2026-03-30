@@ -20,11 +20,10 @@ package dev.denwav.extendedhotbar.mixin.swapping;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import dev.denwav.extendedhotbar.Util;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.LayeredDrawer;
 import net.minecraft.client.gui.hud.InGameHud;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -35,7 +34,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.function.Function;
 
 @Mixin(InGameHud.class)
 public abstract class MixinInGameHudSwapping {
@@ -47,23 +45,16 @@ public abstract class MixinInGameHudSwapping {
             at = @At(
                     value = "INVOKE",
                     ordinal = 0,
-                    target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Ljava/util/function/Function;Lnet/minecraft/util/Identifier;IIII)V"
+                    target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/util/Identifier;IIII)V"
             )
     )
     private void drawTopHotbarBackground(
-            final DrawContext context,
-            final Function<Identifier, RenderLayer> renderLayerGetter,
-            final Identifier texture,
-            final int x,
-            final int y,
-            final int width,
-            final int height,
-            final Operation<Void> original
+            DrawContext instance, RenderPipeline pipeline, Identifier sprite, int x, int y, int width, int height, Operation<Void> original, @Local(argsOnly = true) DrawContext context
     ) {
-        original.call(context, renderLayerGetter, texture, x, y, width, height);
+        original.call(instance, pipeline, sprite, x, y, width, height);
 
         if (Util.isSwappingEnabled()) {
-            context.drawGuiTexture(renderLayerGetter, texture, x, y + Util.DISTANCE, width, height);
+            context.drawGuiTexture(pipeline, sprite, x, y + Util.DISTANCE, width, height);
         }
     }
 
@@ -76,54 +67,34 @@ public abstract class MixinInGameHudSwapping {
             )
     )
     private void drawTopHotbarItem(
-            final InGameHud instance,
-            final DrawContext context,
-            final int x,
-            final int y,
-            final RenderTickCounter tickCounter,
-            final PlayerEntity player,
-            final ItemStack stack,
-            final int seed,
-            final Operation<Void> original,
-            @Local(ordinal = 4) final int loopIndex
+            InGameHud instance, DrawContext context, int x, int y, RenderTickCounter tickCounter, PlayerEntity player, ItemStack stack, int seed, Operation<Void> original, @Local(ordinal = 4) int loopIndex
     ) {
         original.call(instance, context, x, y, tickCounter, player, stack, seed);
 
         if (Util.isSwappingEnabled()) {
-            this.renderHotbarItem(context, x, y + Util.DISTANCE, tickCounter, player, player.getInventory().main.get(loopIndex + Util.SLOT_OFFSET), seed);
+            this.renderHotbarItem(context, x, y + Util.DISTANCE, tickCounter, player, player.getInventory().getStack(loopIndex + Util.SLOT_OFFSET), seed);
         }
     }
 
     @Inject(
-            method = "renderOverlayMessage",
-            at = @At(
-                    value = "INVOKE",
-                    shift = At.Shift.AFTER,
-                    ordinal = 0,
-                    target = "Lnet/minecraft/client/util/math/MatrixStack;translate(FFF)V"
-            )
+            method = "render",
+            at = @At("HEAD")
     )
-    private void moveActionBarTextUp(final CallbackInfo ci, @Local(argsOnly = true) final DrawContext context) {
-        // We don't need to push a matrix or reset, because the surrounding code we are injecting in
-        // to does that for us.
-        if (Util.isSwappingEnabled()) {
-            context.getMatrices().translate(0, Util.DISTANCE, 0);
-        }
-    }
-
-    @Inject(method = "renderMainHud", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;getScaledWindowWidth()I", ordinal = 0))
-    private void moveHudUp(final CallbackInfo ci, @Local(argsOnly = true) final DrawContext context) {
+    private void onRender(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         if (Util.isSwappingEnabled()) {
             Util.moveUp(context.getMatrices());
         }
     }
 
-    @WrapOperation(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/LayeredDrawer;addLayer(Lnet/minecraft/client/gui/LayeredDrawer$Layer;)Lnet/minecraft/client/gui/LayeredDrawer;", ordinal = 3))
-    private LayeredDrawer moveHudDown(final LayeredDrawer instance, final LayeredDrawer.Layer layer, final Operation<LayeredDrawer> original) {
-        return original.call(original.call(instance, layer), (LayeredDrawer.Layer) (context, tickCounter) -> {
-            if (Util.isSwappingEnabled()) {
-                Util.reset(context.getMatrices());
-            }
-        });
+    @Inject(
+            method = "render",
+            at = @At("TAIL")
+    )
+    private void afterRender(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
+        if (Util.isSwappingEnabled()) {
+            Util.reset(context.getMatrices());
+        }
     }
 }
+
+
