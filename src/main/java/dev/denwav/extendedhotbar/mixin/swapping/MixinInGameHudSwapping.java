@@ -38,7 +38,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(InGameHud.class)
 public abstract class MixinInGameHudSwapping {
 
-    @Shadow protected abstract void renderHotbarItem(DrawContext context, int x, int y, RenderTickCounter tickCounter, PlayerEntity player, ItemStack stack, int seed);
+    @Shadow
+    protected abstract void renderHotbarItem(DrawContext context, int x, int y, RenderTickCounter tickCounter, PlayerEntity player, ItemStack stack, int seed);
 
     @WrapOperation(
             method = "renderHotbar",
@@ -51,10 +52,12 @@ public abstract class MixinInGameHudSwapping {
     private void drawTopHotbarBackground(
             DrawContext instance, RenderPipeline pipeline, Identifier sprite, int x, int y, int width, int height, Operation<Void> original, @Local(argsOnly = true) DrawContext context
     ) {
+        // Draw the normal hotbar background at its original position
         original.call(instance, pipeline, sprite, x, y, width, height);
 
         if (Util.isSwappingEnabled()) {
-            context.drawGuiTexture(pipeline, sprite, x, y + Util.DISTANCE, width, height);
+            // Draw the bottom row hotbar background below the normal hotbar
+            context.drawGuiTexture(pipeline, sprite, x, y - Util.DISTANCE + 2, width, height);
         }
     }
 
@@ -69,10 +72,12 @@ public abstract class MixinInGameHudSwapping {
     private void drawTopHotbarItem(
             InGameHud instance, DrawContext context, int x, int y, RenderTickCounter tickCounter, PlayerEntity player, ItemStack stack, int seed, Operation<Void> original, @Local(ordinal = 4) int loopIndex
     ) {
+        // Draw the normal hotbar items at their original position
         original.call(instance, context, x, y, tickCounter, player, stack, seed);
 
         if (Util.isSwappingEnabled()) {
-            this.renderHotbarItem(context, x, y + Util.DISTANCE, tickCounter, player, player.getInventory().getStack(loopIndex + Util.SLOT_OFFSET), seed);
+            // Draw the bottom row items below the normal hotbar
+            this.renderHotbarItem(context, x, y - Util.DISTANCE, tickCounter, player, player.getInventory().getStack(loopIndex + Util.SLOT_OFFSET), seed);
         }
     }
 
@@ -96,5 +101,6 @@ public abstract class MixinInGameHudSwapping {
         }
     }
 }
+
 
 

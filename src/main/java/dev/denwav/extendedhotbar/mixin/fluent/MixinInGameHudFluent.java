@@ -91,12 +91,6 @@ public abstract class MixinInGameHudFluent {
             return y;
         }
 
-        // Get current hotbar index (0-based)
-        int currentHotbarIndex = Util.getCurrentHotbarIndex();
-        if (currentHotbarIndex < 0 || currentHotbarIndex >= this.totalHotbars) {
-            currentHotbarIndex = 0;
-        }
-
         // The selection indicator stays in the same vertical position
         return y;
     }
